@@ -3,13 +3,11 @@
 <span>{% block title %}{{ set.name["en"] }} - YGOJSON{% endblock %}</span>
 
 <span>
-  {% macro subgallery(locale, content, edition) %}
+  {% macro subgallery(locale, content, edition, loopindex) %}
   <div class="row">
     <h2 class="col-auto text-start text-decoration-underline">
       {% if locale %}{{ locale.key | translatelocale }}{% else %}Worldwide{%
-      endif %} -- {% if content.editions %}{% if edition %}{{
-        edition | translateenum
-      }}{% endif %}{% else %}All editions{% endif %}
+      endif %}{% if edition %} ({{ edition | translateenum }}){% endif %}
     </h2>
     <div class="col text-start text-secondary">
       {% if locale %}
@@ -27,9 +25,7 @@
       class="col-2 btn btn-secondary"
       type="button"
       data-bs-toggle="collapse"
-      data-bs-target="#gallery-{% if locale %}{{ locale.key }}{% endif %}-{{
-        edition
-      }}"
+      data-bs-target="#gallery-{% if locale %}{{ locale.key }}{% endif %}-{{ edition }}-{{ loopindex }}"
       aria-expanded="false"
       aria-controls="collapseExample"
     >
@@ -37,7 +33,7 @@
     </button>
     <div
       class="container collapse"
-      id="gallery-{% if locale %}{{ locale.key }}{% endif %}-{{ edition }}"
+      id="gallery-{% if locale %}{{ locale.key }}{% endif %}-{{ edition }}-{{ loopindex }}"
     >
       <div class="row">
         {% for printing in content.cards %}
@@ -51,7 +47,7 @@
                 />
                 <h5 class="card-title">{{ printing.card.text["en"].name }}</h5>
                 <h6 class="card-subtitle text-body-secondary">
-                  {% if locale and printing.suffix %}
+                  {% if locale and locale.prefix and printing.suffix %}
                   {{ locale.prefix + printing.suffix }}
                   {% endif %} {% if locale and printing.suffix and
                   printing.rarity %}
@@ -75,10 +71,10 @@
 
 <span>
   {% macro gallery(locale) %} {% for content in set |
-  getsetlocalecontents(locale) %} {% if not content.editions %}
-  {{ subgallery(locale, content, none) }}
-  {% endif %} {% for edition in content.editions %}
-  {{ subgallery(locale, content, edition) }}
+  getsetlocalecontents(locale) %} {% if not locale.editions %}
+  {{ subgallery(locale, content, none, loop.index) }}
+  {% endif %} {% for edition in locale.editions %}
+  {{ subgallery(locale, content, edition, loop.index) }}
   {% endfor %} {% endfor %} {% endmacro %}
 </span>
 

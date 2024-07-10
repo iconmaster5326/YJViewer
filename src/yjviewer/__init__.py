@@ -173,8 +173,6 @@ FORMAT_TRANSLATED = {
     "duellinks": "Duel Links",
 }
 
-print({l for set_ in ygodb.sets for l in set_.locales})
-
 LOCALE_TRANSLATED = {
     "en": "English",
     "it": "Italian",
@@ -343,7 +341,7 @@ def setgenericimage(set_: ygojson.Set) -> str:
 
 @app.template_filter()
 def setformats(set_: ygojson.Set) -> typing.Iterable[ygojson.Format]:
-    return (f for content in set_.contents for f in content.formats)
+    return {f for l in set_.locales.values() for f in l.formats}
 
 
 @app.route("/")

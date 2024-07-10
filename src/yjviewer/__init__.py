@@ -102,16 +102,96 @@ ENUM_TRANSLATED: typing.Dict[enum.Enum, str] = {
     ygojson.VideoGameRaity.RARE: "R",
     ygojson.VideoGameRaity.SUPER: "SR",
     ygojson.VideoGameRaity.ULTRA: "UR",
+    ygojson.SetEdition.FIRST: "1st Edition",
+    ygojson.SetEdition.UNLIMTED: "Unlimited",
+    ygojson.SetEdition.LIMITED: "Limited Edition",
+    ygojson.SetEdition.NONE: "N/A",
+    ygojson.Format.DUELLINKS: "Duel Links",
+    ygojson.Format.MASTERDUEL: "Master Duel",
+    ygojson.Format.OCG: "OCG",
+    ygojson.Format.TCG: "TCG",
+    ygojson.Format.SPEED: "Speed Duel",
+    ygojson.CardRarity.COMMON: "C",
+    ygojson.CardRarity.SHORTPRINT: "SP/SSP",
+    ygojson.CardRarity.RARE: "R",
+    ygojson.CardRarity.SUPER: "SR",
+    ygojson.CardRarity.ULTRA: "UR",
+    ygojson.CardRarity.ULTIMATE: "UtR",
+    ygojson.CardRarity.SECRET: "ScR",
+    ygojson.CardRarity.ULTRASECRET: "UScR",
+    ygojson.CardRarity.PRISMATICSECRET: "PScR",
+    ygojson.CardRarity.GHOST: "GR/HR",
+    ygojson.CardRarity.PARALLEL: "PR",
+    ygojson.CardRarity.COMMONPARALLEL: "PC/NPR",
+    ygojson.CardRarity.RAREPARALLEL: "RPR",
+    ygojson.CardRarity.SUPERPARALLEL: "SPR",
+    ygojson.CardRarity.ULTRAPARALLEL: "UPR",
+    ygojson.CardRarity.DTPC: "DPC/DNPR",
+    ygojson.CardRarity.DTPSP: "DPSP/DNRPR",
+    ygojson.CardRarity.DTRPR: "DRPR",
+    ygojson.CardRarity.DTSPR: "DSPR",
+    ygojson.CardRarity.DTUPR: "DUPR",
+    ygojson.CardRarity.DTSCPR: "DScPR",
+    ygojson.CardRarity.GOLD: "Gold",
+    ygojson.CardRarity.TENTHOUSANDSECRET: "10,000ScR",
+    ygojson.CardRarity.TWENTITHSECRET: "20ScR",
+    ygojson.CardRarity.COLLECTORS: "CR",
+    ygojson.CardRarity.EXTRASECRET: "EScR",
+    ygojson.CardRarity.EXTRASECRETPARALLEL: "EScPR",
+    ygojson.CardRarity.GOLDGHOST: "G/GR",
+    ygojson.CardRarity.GOLDSECRET: "GScR",
+    ygojson.CardRarity.STARFOIL: "Starfoil",
+    ygojson.CardRarity.MOSAIC: "Mosaic",
+    ygojson.CardRarity.SHATTERFOIL: "Shatterfoil",
+    ygojson.CardRarity.GHOSTPARALLEL: "GPR",
+    ygojson.CardRarity.PLATINUM: "PtR",
+    ygojson.CardRarity.PLATINUMSECRET: "PtScR",
+    ygojson.CardRarity.PREMIUMGOLD: "PGR",
+    ygojson.CardRarity.TWENTYFIFTHSECRET: "25ScR",
+    ygojson.CardRarity.SECRETPARALLEL: "PScR",
+    ygojson.CardRarity.STARLIGHT: "StR/AltR",
+    ygojson.CardRarity.PHARAOHS: "PUR",
+    ygojson.CardRarity.KCCOMMON: "KCC",
+    ygojson.CardRarity.KCRARE: "KCR",
+    ygojson.CardRarity.KCSUPER: "KCSR",
+    ygojson.CardRarity.KCULTRA: "KCUR",
+    ygojson.CardRarity.KCSECRET: "KCScR",
+    ygojson.CardRarity.MILLENIUM: "MR",
+    ygojson.CardRarity.MILLENIUMSUPER: "MSR",
+    ygojson.CardRarity.MILLENIUMULTRA: "MUR",
+    ygojson.CardRarity.MILLENIUMSECRET: "MScR",
+    ygojson.CardRarity.MILLENIUMGOLD: "MGR",
 }
 
 FORMAT_TRANSLATED = {
     "tcg": "TCG",
-    "speed": "TCG Speed Duel",
+    "speed": "Speed Duel",
     "ocg": "OCG",
     "ocg-kr": "Korean OCG",
     "ocg-sc": "Chinese OCG",
     "masterduel": "Master Duel",
     "duellinks": "Duel Links",
+}
+
+print({l for set_ in ygodb.sets for l in set_.locales})
+
+LOCALE_TRANSLATED = {
+    "en": "English",
+    "it": "Italian",
+    "jp": "Japanese",
+    "sc": "Simplified Chinese",
+    "tc": "Traditional Chinese",
+    "ae": "Asian-English",
+    "eu": "English (Europe)",
+    "na": "English (North America)",
+    "fr": "French",
+    "sp": "Spanish",
+    "de": "German",
+    "pt": "Portugese",
+    "ja": "Japanese",
+    "au": "English (Austrailia)",
+    "kr": "Korean",
+    # TODO: what is "fc"?
 }
 
 FORMAT_TO_LOCALES = {
@@ -142,6 +222,11 @@ def translateenums(es: typing.Iterable[enum.Enum]) -> typing.Iterable:
 @app.template_filter()
 def translateformat(f: str) -> str:
     return FORMAT_TRANSLATED.get(f, f)
+
+
+@app.template_filter()
+def translatelocale(l: str) -> str:
+    return LOCALE_TRANSLATED.get(l, l)
 
 
 @app.template_filter()
@@ -179,6 +264,88 @@ def currentlegality(
         return ygojson.Legality.UNLIMITED
 
 
+@app.template_filter()
+def getsetlocalecontents(
+    set_: ygojson.Set, locale: typing.Optional[ygojson.SetLocale]
+) -> typing.Iterable[ygojson.SetContents]:
+    if not locale:
+        yield from set_.contents
+        return
+    for content in set_.contents:
+        if locale in content.locales:
+            yield content
+
+
+CARD_BACK_URL = "https://ms.yugipedia.com//e/e5/Back-EN.png"
+
+
+@app.template_filter()
+def printingimage(
+    set_: ygojson.Set,
+    printing: ygojson.CardPrinting,
+    locale: typing.Optional[ygojson.SetLocale],
+    edition: typing.Optional[ygojson.SetEdition],
+) -> str:
+    if not edition:
+        edition = ygojson.SetEdition.NONE
+    if not locale:
+        if printing.card.images:
+            return printing.card.images[0].card_art or CARD_BACK_URL
+        return CARD_BACK_URL
+    if edition in locale.card_images and printing in locale.card_images[edition]:
+        return locale.card_images[edition][printing]
+    if (
+        ygojson.SetEdition.NONE in locale.card_images
+        and printing in locale.card_images[ygojson.SetEdition.NONE]
+    ):
+        return locale.card_images[ygojson.SetEdition.NONE][printing]
+    return CARD_BACK_URL
+
+
+@app.template_filter()
+def dbsetlinks(db_ids: typing.Iterable[int]) -> typing.Iterable[str]:
+    return [
+        f'<a href="https://www.db.yugioh-card.com/yugiohdb/card_search.action?ope=1&pid={id}&rp=99999&request_locale=en">{id}</a>'
+        for id in db_ids
+    ]
+
+
+@app.template_filter()
+def setgenericboximage(set_: ygojson.Set) -> str:
+    for preferred_locale in ["en", "na", "ja", "jp"]:
+        if (
+            preferred_locale in set_.locales
+            and set_.locales[preferred_locale].box_image
+        ):
+            return set_.locales[preferred_locale].box_image or ""
+    for locale in set_.locales.values():
+        if locale.box_image:
+            return locale.box_image
+    for content in set_.contents:
+        if content.box_image:
+            return content.box_image
+    return ""
+
+
+@app.template_filter()
+def setgenericimage(set_: ygojson.Set) -> str:
+    for preferred_locale in ["en", "na", "ja", "jp"]:
+        if preferred_locale in set_.locales and set_.locales[preferred_locale].image:
+            return set_.locales[preferred_locale].image or ""
+    for locale in set_.locales.values():
+        if locale.image:
+            return locale.image
+    for content in set_.contents:
+        if content.image:
+            return content.image
+    return setgenericboximage(set_)
+
+
+@app.template_filter()
+def setformats(set_: ygojson.Set) -> typing.Iterable[ygojson.Format]:
+    return (f for content in set_.contents for f in content.formats)
+
+
 @app.route("/")
 def index():
     return flask.render_template("index.j2", ygodb=ygodb)
@@ -200,4 +367,23 @@ def card(uuid: uuid.UUID):
         "card.j2",
         ygodb=ygodb,
         card=ygodb.cards_by_id[uuid],
+    )
+
+
+@app.route("/random-set")
+def random_set():
+    return app.redirect(
+        flask.url_for(
+            set_.__name__,
+            uuid=random.choice([*ygodb.sets_by_id]),
+        )
+    )
+
+
+@app.route("/set/<uuid:uuid>")
+def set_(uuid: uuid.UUID):
+    return flask.render_template(
+        "set.j2",
+        ygodb=ygodb,
+        set=ygodb.sets_by_id[uuid],
     )

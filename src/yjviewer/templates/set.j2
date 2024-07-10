@@ -1,0 +1,126 @@
+{% extends "page.j2" %}
+
+<span>{% block title %}{{ set.name["en"] }} - YGOJSON{% endblock %}</span>
+
+<span>
+  {% macro subgallery(locale, content, edition) %}
+  <div class="row">
+    <h2 class="col-auto text-start text-decoration-underline">
+      {% if locale %}{{ locale.key | translatelocale }}{% else %}Worldwide{%
+      endif %} -- {% if content.editions %}{% if edition %}{{
+        edition | translateenum
+      }}{% endif %}{% else %}All editions{% endif %}
+    </h2>
+    <div class="col text-start text-secondary">
+      {% if locale %}
+      {{ locale.prefix }}
+      {% if locale.date %} -- {{ locale.date }}{% endif %} {% if locale.db_ids
+      %} -- Konami ID: {{ locale.db_ids | dbsetlinks | join(" / ") }}{% endif %}
+      {% if content.ygoprodeck %} -- YGOPRODECK:
+      <a href="https://ygoprodeck.com/pack/{{ content.ygoprodeck }}">{{
+        content.ygoprodeck
+      }}</a
+      >{% endif %} {% else %} {% if set.date %}{{ set.date }}{% endif %} {%
+      endif %} ({{ content.cards | length }} cards)
+    </div>
+    <button
+      class="col-2 btn btn-secondary"
+      type="button"
+      data-bs-toggle="collapse"
+      data-bs-target="#gallery-{% if locale %}{{ locale.key }}{% endif %}-{{
+        edition
+      }}"
+      aria-expanded="false"
+      aria-controls="collapseExample"
+    >
+      Show/Hide
+    </button>
+    <div
+      class="container collapse"
+      id="gallery-{% if locale %}{{ locale.key }}{% endif %}-{{ edition }}"
+    >
+      <div class="row">
+        {% for printing in content.cards %}
+        <div class="col-3">
+          <a href="/card/{{ printing.card.id }}">
+            <div class="card m-1 p-0">
+              <div class="card-body">
+                <img
+                  class="card-img-top"
+                  src="{{ set | printingimage(printing, locale, edition) }}"
+                />
+                <h5 class="card-title">{{ printing.card.text["en"].name }}</h5>
+                <h6 class="card-subtitle text-body-secondary">
+                  {% if locale and printing.suffix %}
+                  {{ locale.prefix + printing.suffix }}
+                  {% endif %} {% if locale and printing.suffix and
+                  printing.rarity %}
+                  <span> -- </span>
+                  {% endif %} {% if printing.rarity %}
+                  {{ printing.rarity | translateenum }}
+                  {% endif %} {% if printing.rarity and printing.replica %}
+                  <span> -- </span>
+                  {% endif %} {% if printing.replica %} replica {% endif %}
+                </h6>
+              </div>
+            </div>
+          </a>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  {% endmacro %}
+</span>
+
+<span>
+  {% macro gallery(locale) %} {% for content in set |
+  getsetlocalecontents(locale) %} {% if not content.editions %}
+  {{ subgallery(locale, content, none) }}
+  {% endif %} {% for edition in content.editions %}
+  {{ subgallery(locale, content, edition) }}
+  {% endfor %} {% endfor %} {% endmacro %}
+</span>
+
+{% block contents %}
+<div class="container">
+  <h1 class="row fw-bold text-decoration-underline">{{ set.name["en"] }}</h1>
+  <div class="row">
+    <div class="col-3">
+      <img
+        style="height: 100%; width: 100%; object-fit: contain"
+        src="{{ set | setgenericimage }}"
+      />
+    </div>
+    <div class="col-6">
+      <img
+        style="height: 100%; width: 100%; object-fit: contain"
+        src="{{ set | setgenericboximage }}"
+      />
+    </div>
+    <div class="col-3 container p-1 text-end">
+      {% if set.yugipedia %}
+      <div class="row">
+        <span
+          ><b>Yugipedia: </b
+          ><a href="https://yugipedia.com/wiki/{{ set.yugipedia.name }}"
+            >{{ set.yugipedia.name }} ({{ set.yugipedia.id }})</a
+          ></span
+        >
+      </div>
+      {% endif %}
+      <div class="row">
+        <span
+          ><b>Formats: </b
+          >{{ set | setformats | translateenums | join(" / ") }}</span
+        >
+      </div>
+    </div>
+  </div>
+  {% if not set.locales %}
+  {{ gallery(none) }}
+  {% endif %} {% for locale in set.locales.values() %}
+  {{ gallery(locale) }}
+  {% endfor %}
+</div>
+{% endblock %}

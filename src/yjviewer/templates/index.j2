@@ -1,0 +1,8 @@
+{% extends "page.j2" %}
+
+<span>{% block title %}YGOJSON{% endblock %}</span>
+
+{% block contents %}
+<div class="row"><h1>YGOJSON - The Ultimate Yugioh Database</h1></div>
+<div>In this database we have {{ ygodb.cards | length }} cards.</div>
+{% endblock %}

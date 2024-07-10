@@ -1,0 +1,272 @@
+{% extends "page.j2" %}
+
+<span>{% block title %}{{ card.text["en"].name }} - YGOJSON{% endblock %}</span>
+
+{% block contents %}
+<div class="container">
+  <div class="row">
+    <div class="col-3">
+      <img
+        src="{{ card.images[0].card_art }}"
+        style="height: 100%; width: 100%; object-fit: contain"
+      />
+    </div>
+    <div class="col-9 container">
+      <h1 class="row">{{ card.text["en"].name }}</h1>
+      <div class="row">
+        <div class="card col-3 m-1 p-0">
+          <div class="card-body">
+            <h5 class="card-title">Card Type</h5>
+            <h6 class="card-subtitle text-body-secondary">
+              {{ card.card_type | translateenum }}
+            </h6>
+          </div>
+        </div>
+        {% if card.subcategory %}
+        <div class="card col-3 m-1 p-0">
+          <div class="card-body">
+            <h5 class="card-title">Category</h5>
+            <h6 class="card-subtitle text-body-secondary">
+              {{ card.subcategory | translateenum }}
+            </h6>
+          </div>
+        </div>
+        {% endif %} {% if card.character %}
+        <div class="card col-3 m-1 p-0">
+          <div class="card-body">
+            <h5 class="card-title">Character</h5>
+            <h6 class="card-subtitle text-body-secondary">
+              {{ card.character }}
+            </h6>
+          </div>
+        </div>
+        {% endif %} {% if card.skill_type %}
+        <div class="card col-3 m-1 p-0">
+          <div class="card-body">
+            <h5 class="card-title">Skill Type</h5>
+            <h6 class="card-subtitle text-body-secondary">
+              {{ card.skill_type }}
+            </h6>
+          </div>
+        </div>
+        {% endif %} {% if card.attribute %}
+        <div class="card col-3 m-1 p-0">
+          <div class="card-body">
+            <h5 class="card-title">Attribute</h5>
+            <h6 class="card-subtitle text-body-secondary">
+              {{ card.attribute | translateenum }}
+            </h6>
+          </div>
+        </div>
+        {% endif %} {% if card.monster_card_types %}
+        <div class="card col-3 m-1 p-0">
+          <div class="card-body">
+            <h5 class="card-title">Summoning Types</h5>
+            <h6 class="card-subtitle text-body-secondary">
+              {{ card.monster_card_types | translateenums | join(" / ") }}
+            </h6>
+          </div>
+        </div>
+        {% endif %} {% if card.type %}
+        <div class="card col-3 m-1 p-0">
+          <div class="card-body">
+            <h5 class="card-title">Type</h5>
+            <h6 class="card-subtitle text-body-secondary">
+              {{ card.type | translateenum }}
+            </h6>
+          </div>
+        </div>
+        {% endif %} {% if card.classifications %}
+        <div class="card col-3 m-1 p-0">
+          <div class="card-body">
+            <h5 class="card-title">Classifications</h5>
+            <h6 class="card-subtitle text-body-secondary">
+              {{ card.classifications | translateenums | join(" / ") }}
+            </h6>
+          </div>
+        </div>
+        {% endif %} {% if card.abilities %}
+        <div class="card col-3 m-1 p-0">
+          <div class="card-body">
+            <h5 class="card-title">Abilities</h5>
+            <h6 class="card-subtitle text-body-secondary">
+              {{ card.abilities | translateenums | join(" / ") }}
+            </h6>
+          </div>
+        </div>
+        {% endif %} {% if card.level is not none %}
+        <div class="card col-3 m-1 p-0">
+          <div class="card-body">
+            <h5 class="card-title">Level</h5>
+            <h6 class="card-subtitle text-body-secondary">{{ card.level }}</h6>
+          </div>
+        </div>
+        {% endif %} {% if card.rank is not none %}
+        <div class="card col-3 m-1 p-0">
+          <div class="card-body">
+            <h5 class="card-title">Rank</h5>
+            <h6 class="card-subtitle text-body-secondary">{{ card.rank }}</h6>
+          </div>
+        </div>
+        {% endif %} {% if card.link_arrows %}
+        <div class="card col-3 m-1 p-0">
+          <div class="card-body">
+            <h5 class="card-title">Link Arrows</h5>
+            <h6 class="card-subtitle text-body-secondary">
+              {{ card.link_arrows | translateenums | join }}
+            </h6>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+      {% if card.text["en"].pendulum_effect %}
+      <div class="row">
+        <h4>Pendulum Text</h4>
+        <div style="white-space: pre-line">
+          {{ card.text["en"].pendulum_effect }}
+        </div>
+      </div>
+      {% endif %}
+      <div class="row">
+        <h4>Card Text</h4>
+        <div style="white-space: pre-line">{{ card.text["en"].effect }}</div>
+      </div>
+      <div class="row">
+        {% if card.scale is not none %}
+        <div class="card col-3 m-1 p-0">
+          <div class="card-body">
+            <h5 class="card-title">Scale</h5>
+            <h6 class="card-subtitle text-body-secondary">{{ card.scale }}</h6>
+          </div>
+        </div>
+        {% endif %} {% if card.atk is not none %}
+        <div class="card col-3 m-1 p-0">
+          <div class="card-body">
+            <h5 class="card-title">ATK</h5>
+            <h6 class="card-subtitle text-body-secondary">{{ card.atk }}</h6>
+          </div>
+        </div>
+        {% endif %} {% if card.def_ is not none %}
+        <div class="card col-3 m-1 p-0">
+          <div class="card-body">
+            <h5 class="card-title">DEF</h5>
+            <h6 class="card-subtitle text-body-secondary">{{ card.def_ }}</h6>
+          </div>
+        </div>
+        {% endif %} {% if card.link_arrows %}
+        <div class="card col-3 m-1 p-0">
+          <div class="card-body">
+            <h5 class="card-title">Link</h5>
+            <h6 class="card-subtitle text-body-secondary">
+              {{ card.link_arrows | length }}
+            </h6>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col container">
+      <h2 class="row">External IDs</h2>
+      <ul class="row">
+        <li>Password: {{ card.passwords | join(" / ") }}</li>
+        {% if card.db_id %}
+        <li>
+          Konami ID:
+          <a
+            href="https://www.db.yugioh-card.com/yugiohdb/card_search.action?ope=2&cid={{
+              card.db_id
+            }}&request_locale=en"
+            >{{ card.db_id }}</a
+          >
+        </li>
+        {% endif %} {% for yugipedia in card.yugipedia_pages %}
+        <li>
+          Yugipedia:
+          <a href="https://yugipedia.com/wiki/{{ yugipedia.name }}"
+            >{{ yugipedia.name }} ({{ yugipedia.id }})</a
+          >
+        </li>
+        {% endfor %} {% if card.ygoprodeck %}
+        <li>
+          YGOPRODECK:
+          <a href="https://ygoprodeck.com/card/{{ card.ygoprodeck.name }}"
+            >{{ card.ygoprodeck.name }} ({{ card.ygoprodeck.id | zfill(8)}})</a
+          >
+        </li>
+        {% endif %} {% if card.yamlyugi %}
+        <li>
+          Yaml Yugi:
+          <a
+            href="https://github.com/DawnbrandBots/yaml-yugi/blob/master/data/cards/{{ card.yamlyugi | zfill(8) }}.yaml"
+            >{{ card.yamlyugi | zfill(8) }}</a
+          >
+        </li>
+        {% endif %}
+      </ul>
+    </div>
+    <div class="col container">
+      <h2 class="row">Legality</h2>
+      <div class="row">
+        {% if card.illegal %}
+        <div class="col-3">This card is illegal in all formats.</div>
+        {% else %} {% for format in card.legality %}
+        <div class="col-3">
+          <div class="card m-1 p-0">
+            <div class="card-body">
+              <h5 class="card-title">{{ format | translateformat }}</h5>
+              <h6 class="card-subtitle text-body-secondary">
+                {{ card | currentlegality(format) | translateenum }}
+              </h6>
+            </div>
+          </div>
+        </div>
+        {% endfor %} {% endif %}
+      </div>
+    </div>
+  </div>
+  <div class="row">
+    {% if card.master_duel_rarity %}
+    <div class="col container">
+      <h2 class="row">Master Duel</h2>
+      <ul class="row">
+        <li>Rairty: {{ card.master_duel_rarity | translateenum }}</li>
+        <li>
+          Craftable? {% if card.master_duel_craftable %}Yes{% else %}No{% endif
+          %}
+        </li>
+      </ul>
+    </div>
+    {% endif %} {% if card.duel_links_rarity %}
+    <div class="col container">
+      <h2 class="row">Duel Links</h2>
+      <ul class="row">
+        <li>Rairty: {{ card.duel_links_rarity | translateenum }}</li>
+      </ul>
+    </div>
+    {% endif %}
+  </div>
+  <div class="row">
+    {% if card.sets %}
+    <div class="col container">
+      <h2 class="row">Found In</h2>
+      <ul class="row">
+        {% for set in card.sets | unique %}
+        <li><a href="/set/{{ set.id }}">{{ set.name["en"] }}</a></li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %} {% if card.series %}
+    <div class="col container">
+      <h2 class="row">Part of</h2>
+      <ul class="row">
+        {% for series in card.series | unique %}
+        <li><a href="/series/{{ series.id }}">{{ series.name["en"] }}</a></li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

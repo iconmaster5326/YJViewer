@@ -1,6 +1,8 @@
 import enum
+import os
 import typing
 
+import lark
 import ygojson
 
 SEARCH_RESULTS_PER_PAGE = 200
@@ -67,6 +69,18 @@ class Term:
         raise NotImplementedError
 
 
+class QueryParser(lark.Transformer):
+    def __init__(self, search: "Search") -> None:
+        super().__init__(True)
+        self.search = search
+
+    def start(self, data) -> typing.Any:
+        self.search.terms.extend(data)
+
+    def WORD(self, data) -> typing.Any:
+        return TermPredicate(FilterName, FilterMode.DEFAULT, str(data))
+
+
 class Search:
     query: str
     terms: typing.List[Term]
@@ -74,8 +88,14 @@ class Search:
 
     def __init__(self, query: str) -> None:
         self.query = query
-        self.terms = [TermPredicate(FilterName, FilterMode.DEFAULT, query)]
-        self.sorts = [Sort(SorterClass, SortDir.ASC), Sort(SorterName, SortDir.ASC)]
+        self.terms = []
+        self.sorts = []
+
+        tree = LANGUAGE.parse(query)
+        parsed = QueryParser(self).transform(tree)
+
+        if not self.sorts:
+            self.sorts = [Sort(SorterClass, SortDir.ASC), Sort(SorterName, SortDir.ASC)]
 
     def human_readable_query(self) -> str:
         return f"things whose name contains '{self.query}'"
@@ -88,6 +108,11 @@ class Search:
             results, key=lambda x: tuple(sort.execute(db, x) for sort in self.sorts)
         )
 
+
+with open(
+    os.path.join(os.path.dirname(__file__), "search.lark"), encoding="utf-8"
+) as file:
+    LANGUAGE = lark.Lark(file)
 
 ###################
 # TERMS
@@ -183,13 +208,17 @@ class FilterName(Filter):
                     yield result
 
 
+FILTERS = [
+    FilterName,
+]
+
 ###################
 # SORTERS
 ###################
 
 
 class SorterClass(Sorter):
-    names = ["classes", "class"]
+    names = ["classes", "class", "cl"]
 
     @classmethod
     def execute(cls, db: ygojson.Database, result: Thing, dir: SortDir) -> typing.Any:
@@ -226,3 +255,9 @@ class SorterName(Sorter):
             return s
         else:
             return tuple(-ord(c) for c in s)
+
+
+SORTERS = [
+    SorterClass,
+    SorterName,
+]

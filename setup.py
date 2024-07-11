@@ -31,7 +31,7 @@ setuptools.setup(
     keywords="yugioh,ygo,ygojson",
     packages=setuptools.find_packages("src"),
     python_requires=">=3.8, <4",
-    install_requires=["Flask", "ygojson"],
+    install_requires=["Flask", "lark", "ygojson"],
     extras_require={
         "dev": ["pre-commit", "watchdog"],
         "test": [],

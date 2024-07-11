@@ -1,0 +1,5 @@
+start: WORD*
+
+WORD: /[^\s:<>\(\)\-]+/
+
+%ignore /\s+/

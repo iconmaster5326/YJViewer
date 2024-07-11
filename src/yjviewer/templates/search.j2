@@ -8,7 +8,26 @@
     <h1 class="col-auto fw-bold text-decoration-underline">Search Results</h1>
     <div class="col text-end align-self-end">
       <div>Searching for: things whose name contains "{{ query }}"</div>
-      <div>({{ results | length }}{% if (results | length) >= SEARCH_RESULTS_PER_PAGE %}+{% endif %} results returned)</div>
+      <div>({{ n_results }} results returned)</div>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col card">
+      <div class="card-body">
+        <span>Page:</span>
+        {% for page_number in range(1, n_pages+1) %}
+        <span
+          >{% if page == page_number %}
+          {{ page_number }}
+          {% else %}
+          <a
+            href="/search?query={{ query | urlencode }}&page={{ page_number }}"
+            >{{ page_number }}</a
+          >
+          {% endif %}
+        </span>
+        {% endfor %}
+      </div>
     </div>
   </div>
   <div class="row g-1">

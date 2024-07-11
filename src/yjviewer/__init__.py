@@ -1,5 +1,6 @@
 import datetime
 import enum
+import math
 import os
 import random
 import typing
@@ -482,7 +483,7 @@ SEARCH_RESULTS_PER_PAGE = 200
 
 def do_search(
     query: str,
-) -> typing.Iterable[
+) -> typing.List[
     typing.Union[ygojson.Card, ygojson.Set, ygojson.Series, ygojson.SealedProduct]
 ]:
     query_normalized = query.strip().lower()
@@ -491,23 +492,15 @@ def do_search(
     for card in ygodb.cards:
         if query_normalized in card.text["en"].name.lower():
             result.add(card)
-            if len(result) >= SEARCH_RESULTS_PER_PAGE:
-                return sorted(result, key=sort_search_result)[:SEARCH_RESULTS_PER_PAGE]
     for set_ in ygodb.sets:
         if query_normalized in set_.name["en"].lower():
             result.add(set_)
-            if len(result) >= SEARCH_RESULTS_PER_PAGE:
-                return sorted(result, key=sort_search_result)[:SEARCH_RESULTS_PER_PAGE]
     for series in ygodb.series:
         if query_normalized in series.name["en"].lower():
             result.add(series)
-            if len(result) >= SEARCH_RESULTS_PER_PAGE:
-                return sorted(result, key=sort_search_result)[:SEARCH_RESULTS_PER_PAGE]
     for product in ygodb.products:
         if query_normalized in product.name["en"].lower():
             result.add(product)
-            if len(result) >= SEARCH_RESULTS_PER_PAGE:
-                return sorted(result, key=sort_search_result)[:SEARCH_RESULTS_PER_PAGE]
 
     return sorted(result, key=sort_search_result)
 
@@ -515,10 +508,17 @@ def do_search(
 @app.route("/search")
 def search():
     query = flask.request.args.get("query", "")
+    page = int(flask.request.args.get("page", "1"))
+    results = do_search(query)
     return flask.render_template(
         "search.j2",
         ygodb=ygodb,
         query=query,
-        results=do_search(query),
+        results=results[SEARCH_RESULTS_PER_PAGE * (page - 1) :][
+            :SEARCH_RESULTS_PER_PAGE
+        ],
+        n_results=len(results),
         SEARCH_RESULTS_PER_PAGE=SEARCH_RESULTS_PER_PAGE,
+        page=page,
+        n_pages=math.ceil(len(results) / SEARCH_RESULTS_PER_PAGE),
     )

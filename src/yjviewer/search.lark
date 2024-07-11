@@ -12,7 +12,7 @@ negation: "-" term
 
 ?word: WORD | ESCAPED_STRING
 
-WORD: /[^\s:<>!=\(\)\-"\|]+/
+WORD: /[^\s:<>!=\(\)"\|\-][^\s:<>!=\(\)"\|]*/
 CMPOP: /(:|!?=|=|>=?|<=?)/
 %import common.ESCAPED_STRING
 

@@ -77,6 +77,9 @@ def _flatten(xs):
         yield from _flatten(x)
 
 
+SORT_FILTER = "sort"
+
+
 class QueryParser(lark.Transformer):
     def __init__(self, search: "Search") -> None:
         super().__init__(True)
@@ -96,6 +99,34 @@ class QueryParser(lark.Transformer):
     def predicate_full(self, data) -> typing.Any:
         (filtername, cmpop, word) = data
         filtername_normalized = filtername.strip().lower()
+
+        if filtername_normalized == SORT_FILTER:
+            sorter_split = [x.strip() for x in word.split("-")]
+            if not sorter_split:
+                raise SearchFailedException(
+                    f"No sorter given! You need something after the 'sort:'."
+                )
+            if len(sorter_split) > 2:
+                raise SearchFailedException(
+                    f"Too many arguments to the sorter given! The format is 'sort:SORTER[-DIRECTION]'."
+                )
+            sortername = sorter_split[0]
+            if len(sorter_split) == 2:
+                if sorter_split[1] == "asc":
+                    dir_ = SortDir.ASC
+                elif sorter_split[1] == "desc":
+                    dir_ = SortDir.DESC
+                else:
+                    raise SearchFailedException(
+                        f"Unknown sorting direction '{sorter_split[1]}'!"
+                    )
+            else:
+                dir_ = SortDir.ASC
+            if sortername not in SORTER_NAME_MAP:
+                raise SearchFailedException(f"Unknown sorter '{filtername}'!")
+            self.search.sorts.append(Sort(SORTER_NAME_MAP[sortername], dir_))
+            return []
+
         if filtername_normalized not in FILTER_NAME_MAP:
             raise SearchFailedException(f"Unknown filter '{filtername}'!")
         return TermPredicate(

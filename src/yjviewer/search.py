@@ -1,6 +1,8 @@
 import datetime
 import enum
+import math
 import os
+import sys
 import typing
 
 import lark
@@ -280,6 +282,41 @@ class FilterName(Filter):
                     yield result
             elif type(result) is ygojson.SealedProduct:
                 if cmp(result.name["en"].lower()):
+                    yield result
+
+
+class FilterEffect(Filter):
+    names = ["effect", "e"]
+
+    @classmethod
+    def execute(
+        cls,
+        db: ygojson.Database,
+        predicate: "TermPredicate",
+        results: typing.Iterable[Thing],
+    ) -> typing.Iterable[Thing]:
+        query_normalized = predicate.value.strip().lower()
+
+        def cmp(s: str) -> bool:
+            if predicate.mode == FilterMode.DEFAULT:
+                return query_normalized in s
+            elif predicate.mode == FilterMode.EQ:
+                return query_normalized == s
+            raise SearchFailedException(
+                f"Search filter 'effect' does not accept filter mode '{predicate.mode.value}'!"
+            )
+
+        for result in results:
+            if type(result) is ygojson.Card:
+                if cmp(
+                    (
+                        (result.text["en"].pendulum_effect or "")
+                        + "\n"
+                        + (result.text["en"].effect or "")
+                    )
+                    .strip()
+                    .lower()
+                ):
                     yield result
 
 
@@ -566,6 +603,32 @@ class FilterDate(Filter):
                 yield result
 
 
+def _get_release_date(result: Thing) -> typing.Optional[datetime.date]:
+    if type(result) is ygojson.Card:
+        dates = []
+        for set_ in result.sets:
+            locales: typing.Set[ygojson.SetLocale] = set()
+            for content in set_.contents:
+                for printing in content.cards:
+                    if printing.card == result:
+                        locales.update(content.locales)
+            if not locales and set_.date:
+                dates.append(set_.date)
+            for locale in locales:
+                if locale.date:
+                    dates.append(locale.date)
+        if dates:
+            return min(dates)
+    elif type(result) is ygojson.Set or type(result) is ygojson.SealedProduct:
+        if result.date:
+            return result.date
+        dates = [x.date for x in result.locales.values() if x.date]
+        if dates:
+            return min(dates)
+    else:
+        return None
+
+
 class FilterDateOfRelease(FilterDate):
     names = ["date", "d"]
 
@@ -573,32 +636,12 @@ class FilterDateOfRelease(FilterDate):
     def get_date_prop(
         cls, db: ygojson.Database, predicate: "TermPredicate", result: Thing
     ) -> typing.Optional[datetime.date]:
-        if type(result) is ygojson.Card:
-            dates = []
-            for set_ in result.sets:
-                locales: typing.Set[ygojson.SetLocale] = set()
-                for content in set_.contents:
-                    for printing in content.cards:
-                        if printing.card == result:
-                            locales.update(content.locales)
-                if not locales and set_.date:
-                    dates.append(set_.date)
-                for locale in locales:
-                    if locale.date:
-                        dates.append(locale.date)
-            if dates:
-                return min(dates)
-        elif type(result) is ygojson.Set or type(result) is ygojson.SealedProduct:
-            if result.date:
-                return result.date
-            dates = [x.date for x in result.locales.values() if x.date]
-            if dates:
-                return min(dates)
-        return None
+        return _get_release_date(result)
 
 
 FILTERS = [
     FilterName,
+    FilterEffect,
     FilterClass,
     FilterType,
     FilterAttribute,
@@ -653,7 +696,7 @@ class SorterName(Sorter):
         elif type(result) is ygojson.SealedProduct:
             s = result.name["en"].lower()
         else:
-            s = str(result)
+            return None
 
         if dir == SortDir.ASC:
             return s
@@ -661,9 +704,134 @@ class SorterName(Sorter):
             return tuple(-ord(c) for c in s)
 
 
+class SorterATK(Sorter):
+    names = ["attack", "atk", "at"]
+
+    @classmethod
+    def execute(cls, db: ygojson.Database, result: Thing, dir: SortDir) -> typing.Any:
+        if type(result) is ygojson.Card:
+            v = result.atk
+            if v is None:
+                return sys.maxsize
+            elif type(v) is str:
+                return sys.maxsize - 1
+            elif dir == SortDir.ASC:
+                return v
+            else:
+                return -int(v)
+        else:
+            return sys.maxsize
+
+
+class SorterDEF(Sorter):
+    names = ["defence", "defense", "def", "de"]
+
+    @classmethod
+    def execute(cls, db: ygojson.Database, result: Thing, dir: SortDir) -> typing.Any:
+        if type(result) is ygojson.Card:
+            v = result.def_
+            if v is None:
+                return sys.maxsize
+            elif type(v) is str:
+                return sys.maxsize - 1
+            elif dir == SortDir.ASC:
+                return v
+            else:
+                return -int(v)
+        else:
+            return sys.maxsize
+
+
+class SorterLevel(Sorter):
+    names = ["level", "lvl", "lv", "l"]
+
+    @classmethod
+    def execute(cls, db: ygojson.Database, result: Thing, dir: SortDir) -> typing.Any:
+        if type(result) is ygojson.Card:
+            v = result.level
+            if v is None:
+                return sys.maxsize
+            elif dir == SortDir.ASC:
+                return v
+            else:
+                return -int(v)
+        else:
+            return sys.maxsize
+
+
+class SorterRank(Sorter):
+    names = ["rank", "r"]
+
+    @classmethod
+    def execute(cls, db: ygojson.Database, result: Thing, dir: SortDir) -> typing.Any:
+        if type(result) is ygojson.Card:
+            v = result.rank
+            if v is None:
+                return sys.maxsize
+            elif dir == SortDir.ASC:
+                return v
+            else:
+                return -int(v)
+        else:
+            return sys.maxsize
+
+
+class SorterScale(Sorter):
+    names = ["scale", "sc"]
+
+    @classmethod
+    def execute(cls, db: ygojson.Database, result: Thing, dir: SortDir) -> typing.Any:
+        if type(result) is ygojson.Card:
+            v = result.scale
+            if v is None:
+                return sys.maxsize
+            elif dir == SortDir.ASC:
+                return v
+            else:
+                return -int(v)
+        else:
+            return sys.maxsize
+
+
+class SorterLink(Sorter):
+    names = ["linkranking", "link", "lr"]
+
+    @classmethod
+    def execute(cls, db: ygojson.Database, result: Thing, dir: SortDir) -> typing.Any:
+        if type(result) is ygojson.Card:
+            v = len(result.link_arrows or [])
+            if dir == SortDir.ASC:
+                return v
+            else:
+                return -int(v)
+        else:
+            return sys.maxsize
+
+
+class SorterDate(Sorter):
+    names = ["date", "d"]
+
+    @classmethod
+    def execute(cls, db: ygojson.Database, result: Thing, dir: SortDir) -> typing.Any:
+        date = _get_release_date(result)
+        if date is None:
+            return math.inf
+        elif dir == SortDir.ASC:
+            return _date_to_timestamp(date)
+        elif dir == SortDir.DESC:
+            return -_date_to_timestamp(date)
+
+
 SORTERS = [
     SorterClass,
     SorterName,
+    SorterATK,
+    SorterDEF,
+    SorterLevel,
+    SorterRank,
+    SorterScale,
+    SorterLink,
+    SorterDate,
 ]
 
 SORTER_NAME_MAP = {name: sorter for sorter in SORTERS for name in sorter.names}

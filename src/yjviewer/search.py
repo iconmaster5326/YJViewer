@@ -26,7 +26,9 @@ class Sorter:
     names: typing.ClassVar[typing.List[str]]
 
     @classmethod
-    def execute(cls, db: ygojson.Database, result: Thing, dir: SortDir) -> typing.Any:
+    def execute(
+        cls, search: "Search", db: ygojson.Database, result: Thing, dir: SortDir
+    ) -> typing.Any:
         raise NotImplementedError
 
 
@@ -38,8 +40,10 @@ class Sort:
         self.sorter = sorter
         self.dir = dir
 
-    def execute(self, db: ygojson.Database, result: Thing) -> typing.Any:
-        return self.sorter.execute(db, result, self.dir)
+    def execute(
+        self, db: ygojson.Database, search: "Search", result: Thing
+    ) -> typing.Any:
+        return self.sorter.execute(search, db, result, self.dir)
 
 
 class FilterMode(enum.Enum):
@@ -58,6 +62,7 @@ class Filter:
     def execute(
         cls,
         db: ygojson.Database,
+        search: "Search",
         predicate: "TermPredicate",
         results: typing.Iterable[Thing],
     ) -> typing.Iterable[Thing]:
@@ -66,7 +71,7 @@ class Filter:
 
 class Term:
     def execute(
-        self, db: ygojson.Database, results: typing.Iterable[Thing]
+        self, db: ygojson.Database, search: "Search", results: typing.Iterable[Thing]
     ) -> typing.Iterable[Thing]:
         raise NotImplementedError
 
@@ -80,6 +85,7 @@ def _flatten(xs):
 
 
 SORT_FILTER = "sort"
+LOCALE_FILTER = "locale"
 
 
 class QueryParser(lark.Transformer):
@@ -129,6 +135,10 @@ class QueryParser(lark.Transformer):
             self.search.sorts.append(Sort(SORTER_NAME_MAP[sortername], dir_))
             return []
 
+        if filtername_normalized == LOCALE_FILTER:
+            self.search.locales.add(word.strip().lower())
+            return []
+
         if filtername_normalized not in FILTER_NAME_MAP:
             raise SearchFailedException(f"Unknown filter '{filtername}'!")
         return TermPredicate(
@@ -155,11 +165,13 @@ class Search:
     query: str
     terms: typing.List[Term]
     sorts: typing.List[Sort]
+    locales: typing.Set[str]
 
     def __init__(self, query: str) -> None:
         self.query = query
         self.terms = []
         self.sorts = []
+        self.locales = set()
 
         tree = LANGUAGE.parse(query)
         # print(tree.pretty())
@@ -171,12 +183,50 @@ class Search:
     def human_readable_query(self) -> str:
         return f"things whose name contains '{self.query}'"
 
+    def _exclude_cards_out_of_locale(
+        self, results: typing.Iterable[ygojson.Card]
+    ) -> typing.Iterable[ygojson.Card]:
+        if not self.locales:
+            yield from results
+            return
+        for result in results:
+            if any(l in result.text and result.text[l].official for l in self.locales):
+                yield result
+
+    def _exclude_sets_out_of_locale(
+        self, results: typing.Iterable[typing.Union[ygojson.Set, ygojson.SealedProduct]]
+    ) -> typing.Iterable[typing.Union[ygojson.Set, ygojson.SealedProduct]]:
+        if not self.locales:
+            yield from results
+            return
+        for result in results:
+            if any(l in result.locales for l in self.locales):
+                yield result
+
+    def _exclude_series_out_of_locale(
+        self, results: typing.Iterable[ygojson.Series]
+    ) -> typing.Iterable[ygojson.Series]:
+        if not self.locales:
+            yield from results
+            return
+        for result in results:
+            if any(l in result.name for l in self.locales):
+                yield result
+
     def execute(self, db: ygojson.Database) -> typing.List[Thing]:
-        results = [*db.cards, *db.sets, *db.products, *db.series]
+        results = [
+            *self._exclude_cards_out_of_locale(db.cards),
+            *self._exclude_sets_out_of_locale(db.sets),
+            *self._exclude_sets_out_of_locale(db.products),
+            *self._exclude_series_out_of_locale(db.series),
+        ]
+        if not self.locales:
+            self.locales = {"en", "jp"}
         for term in self.terms:
-            results = term.execute(db, results)
+            results = term.execute(db, self, results)
         return sorted(
-            results, key=lambda x: tuple(sort.execute(db, x) for sort in self.sorts)
+            results,
+            key=lambda x: tuple(sort.execute(db, self, x) for sort in self.sorts),
         )
 
 
@@ -204,9 +254,9 @@ class TermPredicate(Term):
         self.value = value
 
     def execute(
-        self, db: ygojson.Database, results: typing.Iterable[Thing]
+        self, db: ygojson.Database, search: "Search", results: typing.Iterable[Thing]
     ) -> typing.Iterable[Thing]:
-        return self.filter.execute(db, self, results)
+        return self.filter.execute(db, search, self, results)
 
 
 class TermOr(Term):
@@ -217,11 +267,11 @@ class TermOr(Term):
         self.terms = terms
 
     def execute(
-        self, db: ygojson.Database, results: typing.Iterable[Thing]
+        self, db: ygojson.Database, search: "Search", results: typing.Iterable[Thing]
     ) -> typing.Iterable[Thing]:
         for result in results:
             for term in self.terms:
-                if [*term.execute(db, [result])]:
+                if [*term.execute(db, search, [result])]:
                     yield result
                     break
 
@@ -234,12 +284,12 @@ class TermNegate(Term):
         self.terms = terms
 
     def execute(
-        self, db: ygojson.Database, results: typing.Iterable[Thing]
+        self, db: ygojson.Database, search: "Search", results: typing.Iterable[Thing]
     ) -> typing.Iterable[Thing]:
         for result in results:
             subresults = [result]
             for term in self.terms:
-                subresults = [*term.execute(db, subresults)]
+                subresults = [*term.execute(db, search, subresults)]
             if not subresults:
                 yield result
 
@@ -256,6 +306,7 @@ class FilterName(Filter):
     def execute(
         cls,
         db: ygojson.Database,
+        search: "Search",
         predicate: "TermPredicate",
         results: typing.Iterable[Thing],
     ) -> typing.Iterable[Thing]:
@@ -272,16 +323,28 @@ class FilterName(Filter):
 
         for result in results:
             if type(result) is ygojson.Card:
-                if cmp(result.text["en"].name.lower()):
+                if any(
+                    l in result.text and cmp(result.text[l].name.lower())
+                    for l in search.locales
+                ):
                     yield result
             elif type(result) is ygojson.Set:
-                if cmp(result.name["en"].lower()):
+                if any(
+                    l in result.name and cmp(result.name[l].lower())
+                    for l in search.locales
+                ):
                     yield result
             elif type(result) is ygojson.Series:
-                if cmp(result.name["en"].lower()):
+                if any(
+                    l in result.name and cmp(result.name[l].lower())
+                    for l in search.locales
+                ):
                     yield result
             elif type(result) is ygojson.SealedProduct:
-                if cmp(result.name["en"].lower()):
+                if any(
+                    l in result.name and cmp(result.name[l].lower())
+                    for l in search.locales
+                ):
                     yield result
 
 
@@ -292,6 +355,7 @@ class FilterEffect(Filter):
     def execute(
         cls,
         db: ygojson.Database,
+        search: "Search",
         predicate: "TermPredicate",
         results: typing.Iterable[Thing],
     ) -> typing.Iterable[Thing]:
@@ -308,14 +372,18 @@ class FilterEffect(Filter):
 
         for result in results:
             if type(result) is ygojson.Card:
-                if cmp(
-                    (
-                        (result.text["en"].pendulum_effect or "")
-                        + "\n"
-                        + (result.text["en"].effect or "")
+                if any(
+                    l in result.text
+                    and cmp(
+                        (
+                            (result.text[l].pendulum_effect or "")
+                            + "\n"
+                            + (result.text[l].effect or "")
+                        )
+                        .strip()
+                        .lower()
                     )
-                    .strip()
-                    .lower()
+                    for l in search.locales
                 ):
                     yield result
 
@@ -346,6 +414,7 @@ class FilterClass(Filter):
     def execute(
         cls,
         db: ygojson.Database,
+        search: "Search",
         predicate: "TermPredicate",
         results: typing.Iterable[Thing],
     ) -> typing.Iterable[Thing]:
@@ -372,6 +441,7 @@ class FilterType(Filter):
     def execute(
         cls,
         db: ygojson.Database,
+        search: "Search",
         predicate: "TermPredicate",
         results: typing.Iterable[Thing],
     ) -> typing.Iterable[Thing]:
@@ -412,6 +482,7 @@ class FilterAttribute(Filter):
     def execute(
         cls,
         db: ygojson.Database,
+        search: "Search",
         predicate: "TermPredicate",
         results: typing.Iterable[Thing],
     ) -> typing.Iterable[Thing]:
@@ -443,6 +514,7 @@ class FilterInt(Filter):
     def execute(
         cls,
         db: ygojson.Database,
+        search: "Search",
         predicate: "TermPredicate",
         results: typing.Iterable[Thing],
     ) -> typing.Iterable[Thing]:
@@ -568,6 +640,7 @@ class FilterDate(Filter):
     def execute(
         cls,
         db: ygojson.Database,
+        search: "Search",
         predicate: "TermPredicate",
         results: typing.Iterable[Thing],
     ) -> typing.Iterable[Thing]:
@@ -668,7 +741,9 @@ class SorterClass(Sorter):
     names = ["classes", "class", "cl"]
 
     @classmethod
-    def execute(cls, db: ygojson.Database, result: Thing, dir: SortDir) -> typing.Any:
+    def execute(
+        cls, search: "Search", db: ygojson.Database, result: Thing, dir: SortDir
+    ) -> typing.Any:
         dir_factor = 1 if dir == SortDir.ASC else -1
         if type(result) is ygojson.Card:
             return 1 * dir_factor
@@ -686,15 +761,29 @@ class SorterName(Sorter):
     names = ["names", "name", "n"]
 
     @classmethod
-    def execute(cls, db: ygojson.Database, result: Thing, dir: SortDir) -> typing.Any:
+    def execute(
+        cls, search: "Search", db: ygojson.Database, result: Thing, dir: SortDir
+    ) -> typing.Any:
         if type(result) is ygojson.Card:
-            s = result.text["en"].name.lower()
+            s = "\n".join(
+                (result.text[l].name.lower() if l in result.text else "�")
+                for l in sorted(search.locales)
+            )
         elif type(result) is ygojson.Set:
-            s = result.name["en"].lower()
+            s = "\n".join(
+                (result.name[l].lower() if l in result.name else "�")
+                for l in sorted(search.locales)
+            )
         elif type(result) is ygojson.Series:
-            s = result.name["en"].lower()
+            s = "\n".join(
+                (result.name[l].lower() if l in result.name else "�")
+                for l in sorted(search.locales)
+            )
         elif type(result) is ygojson.SealedProduct:
-            s = result.name["en"].lower()
+            s = "\n".join(
+                (result.name[l].lower() if l in result.name else "�")
+                for l in sorted(search.locales)
+            )
         else:
             return None
 
@@ -708,7 +797,9 @@ class SorterATK(Sorter):
     names = ["attack", "atk", "at"]
 
     @classmethod
-    def execute(cls, db: ygojson.Database, result: Thing, dir: SortDir) -> typing.Any:
+    def execute(
+        cls, search: "Search", db: ygojson.Database, result: Thing, dir: SortDir
+    ) -> typing.Any:
         if type(result) is ygojson.Card:
             v = result.atk
             if v is None:
@@ -727,7 +818,9 @@ class SorterDEF(Sorter):
     names = ["defence", "defense", "def", "de"]
 
     @classmethod
-    def execute(cls, db: ygojson.Database, result: Thing, dir: SortDir) -> typing.Any:
+    def execute(
+        cls, search: "Search", db: ygojson.Database, result: Thing, dir: SortDir
+    ) -> typing.Any:
         if type(result) is ygojson.Card:
             v = result.def_
             if v is None:
@@ -746,7 +839,9 @@ class SorterLevel(Sorter):
     names = ["level", "lvl", "lv", "l"]
 
     @classmethod
-    def execute(cls, db: ygojson.Database, result: Thing, dir: SortDir) -> typing.Any:
+    def execute(
+        cls, search: "Search", db: ygojson.Database, result: Thing, dir: SortDir
+    ) -> typing.Any:
         if type(result) is ygojson.Card:
             v = result.level
             if v is None:
@@ -763,7 +858,9 @@ class SorterRank(Sorter):
     names = ["rank", "r"]
 
     @classmethod
-    def execute(cls, db: ygojson.Database, result: Thing, dir: SortDir) -> typing.Any:
+    def execute(
+        cls, search: "Search", db: ygojson.Database, result: Thing, dir: SortDir
+    ) -> typing.Any:
         if type(result) is ygojson.Card:
             v = result.rank
             if v is None:
@@ -780,7 +877,9 @@ class SorterScale(Sorter):
     names = ["scale", "sc"]
 
     @classmethod
-    def execute(cls, db: ygojson.Database, result: Thing, dir: SortDir) -> typing.Any:
+    def execute(
+        cls, search: "Search", db: ygojson.Database, result: Thing, dir: SortDir
+    ) -> typing.Any:
         if type(result) is ygojson.Card:
             v = result.scale
             if v is None:
@@ -797,7 +896,9 @@ class SorterLink(Sorter):
     names = ["linkranking", "link", "lr"]
 
     @classmethod
-    def execute(cls, db: ygojson.Database, result: Thing, dir: SortDir) -> typing.Any:
+    def execute(
+        cls, search: "Search", db: ygojson.Database, result: Thing, dir: SortDir
+    ) -> typing.Any:
         if type(result) is ygojson.Card:
             v = len(result.link_arrows or [])
             if dir == SortDir.ASC:
@@ -812,7 +913,9 @@ class SorterDate(Sorter):
     names = ["date", "d"]
 
     @classmethod
-    def execute(cls, db: ygojson.Database, result: Thing, dir: SortDir) -> typing.Any:
+    def execute(
+        cls, search: "Search", db: ygojson.Database, result: Thing, dir: SortDir
+    ) -> typing.Any:
         date = _get_release_date(result)
         if date is None:
             return math.inf

@@ -186,13 +186,13 @@ LOCALE_TRANSLATED = {
     "eu": "English (Europe)",
     "na": "English (North America)",
     "fr": "French",
+    "fc": "French (Canada)",
     "sp": "Spanish",
     "de": "German",
     "pt": "Portugese",
     "ja": "Japanese",
     "au": "English (Austrailia)",
     "kr": "Korean",
-    # TODO: what is "fc"?
 }
 
 FORMAT_TO_LOCALES = {

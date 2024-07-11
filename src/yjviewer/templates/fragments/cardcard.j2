@@ -4,7 +4,7 @@
     <div class="card-body">
       <img
         class="card-img-top"
-        src="{{ set | printingimage(printing, locale, edition) }}"
+        src="{{ set | printingimage(card, printing, locale, edition) }}"
       />
       <h5 class="card-title">{{ card.text["en"].name }}</h5>
       {% if set %}

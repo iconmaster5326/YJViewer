@@ -306,15 +306,16 @@ CARD_BACK_URL = "https://ms.yugipedia.com//e/e5/Back-EN.png"
 @app.template_filter()
 def printingimage(
     set_: ygojson.Set,
+    card: ygojson.Card,
     printing: ygojson.CardPrinting,
     locale: typing.Optional[ygojson.SetLocale],
     edition: typing.Optional[ygojson.SetEdition],
 ) -> str:
     if not edition:
         edition = ygojson.SetEdition.NONE
-    if not locale:
-        if printing.card.images:
-            return printing.card.images[0].card_art or CARD_BACK_URL
+    if not printing or not locale:
+        if card.images:
+            return card.images[0].card_art or CARD_BACK_URL
         return CARD_BACK_URL
     if edition in locale.card_images and printing in locale.card_images[edition]:
         return locale.card_images[edition][printing]
@@ -412,4 +413,13 @@ def set_(uuid: uuid.UUID):
         "set.j2",
         ygodb=ygodb,
         set=ygodb.sets_by_id[uuid],
+    )
+
+
+@app.route("/series/<uuid:uuid>")
+def series(uuid: uuid.UUID):
+    return flask.render_template(
+        "series.j2",
+        ygodb=ygodb,
+        series=ygodb.series_by_id[uuid],
     )

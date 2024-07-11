@@ -1,0 +1,36 @@
+{% extends "page.j2" %} {% import "fragments/cardcard.j2" as cardcard %}
+
+<span>{% block title %}{{ series.name["en"] }} - YGOJSON{% endblock %}</span>
+
+{% block contents %}
+<div class="container">
+  <div class="row">
+    <h1 class="col-6 fw-bold text-decoration-underline">
+      {{ series.name["en"] }}
+    </h1>
+    <div class="col-6 text-end">
+      <h2>
+        {% if series.archetype %}Archetype{% else %}Series{% endif %} ({{
+          series.members | length
+        }}
+        members)
+      </h2>
+      {% if series.yugipedia %}
+      <h5>
+        Yugipedia:
+        <a href="https://yugipedia.com/wiki/{{ series.yugipedia.name }}"
+          >{{ series.yugipedia.name }} ({{ series.yugipedia.id }})</a
+        >
+      </h5>
+      {% endif %}
+    </div>
+  </div>
+  <div class="row">
+    {% for member in series.members %}
+    <div class="col-3">
+      {{ cardcard.cardcard(member) }}
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

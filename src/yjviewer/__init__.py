@@ -263,6 +263,16 @@ def currentlegality(
 
 
 @app.template_filter()
+def getsetlocales(
+    set_: ygojson.Set,
+) -> typing.Iterable[typing.Optional[ygojson.SetLocale]]:
+    if not set_.locales:
+        yield None
+        return
+    yield from set_.locales.values()
+
+
+@app.template_filter()
 def getsetlocalecontents(
     set_: ygojson.Set, locale: typing.Optional[ygojson.SetLocale]
 ) -> typing.Iterable[ygojson.SetContents]:
@@ -272,6 +282,22 @@ def getsetlocalecontents(
     for content in set_.contents:
         if locale in content.locales:
             yield content
+
+
+@app.template_filter()
+def getseteditions(
+    set_: ygojson.Set, locale: typing.Optional[ygojson.SetLocale]
+) -> typing.Iterable[typing.Optional[ygojson.SetEdition]]:
+    result = set()
+    if not locale:
+        for content in set_.contents:
+            result.update(content.editions)
+    else:
+        result.update(locale.editions)
+    if not result:
+        yield None
+    else:
+        yield from result
 
 
 CARD_BACK_URL = "https://ms.yugipedia.com//e/e5/Back-EN.png"
@@ -341,7 +367,9 @@ def setgenericimage(set_: ygojson.Set) -> str:
 
 @app.template_filter()
 def setformats(set_: ygojson.Set) -> typing.Iterable[ygojson.Format]:
-    return {f for l in set_.locales.values() for f in l.formats}
+    return {
+        f for l in set_.contents for f in l.formats
+    }  # TODO: stop using deprecated member
 
 
 @app.route("/")

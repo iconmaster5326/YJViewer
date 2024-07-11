@@ -1,9 +1,9 @@
-{% extends "page.j2" %}
+{% extends "page.j2" %} {% import "fragments/cardcard.j2" as cardcard %}
 
 <span>{% block title %}{{ set.name["en"] }} - YGOJSON{% endblock %}</span>
 
 <span>
-  {% macro subgallery(locale, content, edition, loopindex) %}
+  {% macro gallery(locale, content, edition, loopindex) %}
   <div class="row">
     <h2 class="col-auto text-start text-decoration-underline">
       {% if locale %}{{ locale.key | translatelocale }}{% else %}Worldwide{%
@@ -25,7 +25,9 @@
       class="col-2 btn btn-secondary"
       type="button"
       data-bs-toggle="collapse"
-      data-bs-target="#gallery-{% if locale %}{{ locale.key }}{% endif %}-{{ edition }}-{{ loopindex }}"
+      data-bs-target="#gallery-{% if locale %}{{ locale.key }}{% endif %}-{{
+        edition
+      }}-{{ loopindex }}"
       aria-expanded="false"
       aria-controls="collapseExample"
     >
@@ -33,49 +35,20 @@
     </button>
     <div
       class="container collapse"
-      id="gallery-{% if locale %}{{ locale.key }}{% endif %}-{{ edition }}-{{ loopindex }}"
+      id="gallery-{% if locale %}{{ locale.key }}{% endif %}-{{ edition }}-{{
+        loopindex
+      }}"
     >
       <div class="row">
         {% for printing in content.cards %}
         <div class="col-3">
-          <a href="/card/{{ printing.card.id }}">
-            <div class="card m-1 p-0">
-              <div class="card-body">
-                <img
-                  class="card-img-top"
-                  src="{{ set | printingimage(printing, locale, edition) }}"
-                />
-                <h5 class="card-title">{{ printing.card.text["en"].name }}</h5>
-                <h6 class="card-subtitle text-body-secondary">
-                  {% if locale and locale.prefix and printing.suffix %}
-                  {{ locale.prefix + printing.suffix }}
-                  {% endif %} {% if locale and printing.suffix and
-                  printing.rarity %}
-                  <span> -- </span>
-                  {% endif %} {% if printing.rarity %}
-                  {{ printing.rarity | translateenum }}
-                  {% endif %} {% if printing.rarity and printing.replica %}
-                  <span> -- </span>
-                  {% endif %} {% if printing.replica %} replica {% endif %}
-                </h6>
-              </div>
-            </div>
-          </a>
+          {{ cardcard.cardcard(printing.card, printing, locale, edition) }}
         </div>
         {% endfor %}
       </div>
     </div>
   </div>
   {% endmacro %}
-</span>
-
-<span>
-  {% macro gallery(locale) %} {% for content in set |
-  getsetlocalecontents(locale) %} {% if not locale.editions %}
-  {{ subgallery(locale, content, none, loop.index) }}
-  {% endif %} {% for edition in locale.editions %}
-  {{ subgallery(locale, content, edition, loop.index) }}
-  {% endfor %} {% endfor %} {% endmacro %}
 </span>
 
 {% block contents %}
@@ -113,10 +86,10 @@
       </div>
     </div>
   </div>
-  {% if not set.locales %}
-  {{ gallery(none) }}
-  {% endif %} {% for locale in set.locales.values() %}
-  {{ gallery(locale) }}
-  {% endfor %}
+  {% for locale in set | getsetlocales %} {% for content in set |
+  getsetlocalecontents(locale) %} {% for edition in set | getseteditions(locale)
+  %}
+  {{ gallery(locale, content, edition, loop.index) }}
+  {% endfor %} {% endfor %} {% endfor %}
 </div>
 {% endblock %}

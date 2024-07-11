@@ -1,0 +1,34 @@
+{% macro cardcard(card, printing=none, locale=none, edition=none, set=none) %}
+<a href="{% if set %}/set/{{ set.id }}{% else %}/card/{{ card.id }}{% endif %}">
+  <div class="card m-1 p-0">
+    <div class="card-body">
+      <img
+        class="card-img-top"
+        src="{{ set | printingimage(printing, locale, edition) }}"
+      />
+      <h5 class="card-title">{{ card.text["en"].name }}</h5>
+      {% if set %}
+      <h6 class="card-subtitle text-body-secondary">
+        {{ set.name["en"] }}
+        {% if locale %} -- {{ locale.key | translatelocale }}{% endif %}
+        {% if edition %} -- {{ edition | translateenum }}{% endif %}
+        {% if not locale and not edition %} -- {{ set | setformats | translateenums | join("/") }}{% endif %}
+      </h6>
+      {% endif %}
+      {% if printing %}
+      <h6 class="card-subtitle text-body-secondary">
+        {% if locale and locale.prefix and printing.suffix %}
+        {{ locale.prefix + printing.suffix }}
+        {% endif %} {% if locale and printing.suffix and printing.rarity %}
+        <span> -- </span>
+        {% endif %} {% if printing.rarity %}
+        {{ printing.rarity | translateenum }}
+        {% endif %} {% if printing.rarity and printing.replica %}
+        <span> -- </span>
+        {% endif %} {% if printing.replica %} replica {% endif %}
+      </h6>
+      {% endif %}
+    </div>
+  </div>
+</a>
+{% endmacro %}

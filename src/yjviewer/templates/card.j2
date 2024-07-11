@@ -1,4 +1,4 @@
-{% extends "page.j2" %}
+{% extends "page.j2" %} {% import "fragments/cardcard.j2" as cardcard %}
 
 <span>{% block title %}{{ card.text["en"].name }} - YGOJSON{% endblock %}</span>
 
@@ -12,7 +12,9 @@
       />
     </div>
     <div class="col-9 container">
-      <h1 class="row fw-bold text-decoration-underline">{{ card.text["en"].name }}</h1>
+      <h1 class="row fw-bold text-decoration-underline">
+        {{ card.text["en"].name }}
+      </h1>
       <div class="row">
         <div class="card col-3 m-1 p-0">
           <div class="card-body">
@@ -210,9 +212,9 @@
       <h2 class="row">Legality</h2>
       <div class="row">
         {% if card.illegal %}
-        <div class="col-3">This card is illegal in all formats.</div>
+        <div class="col">This card is illegal in all formats.</div>
         {% else %} {% for format in card.legality %}
-        <div class="col-3">
+        <div class="col-4">
           <div class="card m-1 p-0">
             <div class="card-body">
               <h5 class="card-title">{{ format | translateformat }}</h5>
@@ -225,6 +227,18 @@
         {% endfor %} {% endif %}
       </div>
     </div>
+    {% if card.series %}
+    <div class="col container">
+      <h2 class="row">Part of</h2>
+      <ul class="row">
+        {% for series in card.series | unique %}
+        <li>
+          <a href="/series/{{ series.id }}">{{ series.name["en"] }}</a>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
   </div>
   <div class="row">
     {% if card.master_duel_rarity %}
@@ -250,21 +264,16 @@
   <div class="row">
     {% if card.sets %}
     <div class="col container">
-      <h2 class="row">Found In</h2>
-      <ul class="row">
-        {% for set in card.sets | unique %}
-        <li><a href="/set/{{ set.id }}">{{ set.name["en"] }}</a></li>
-        {% endfor %}
-      </ul>
-    </div>
-    {% endif %} {% if card.series %}
-    <div class="col container">
-      <h2 class="row">Part of</h2>
-      <ul class="row">
-        {% for series in card.series | unique %}
-        <li><a href="/series/{{ series.id }}">{{ series.name["en"] }}</a></li>
-        {% endfor %}
-      </ul>
+      <h2 class="row">Printings</h2>
+      <div class="container">
+        <div class="row">
+          {% for set in card.sets | unique %} {% for locale in set | getsetlocales %} {% for content in set | getsetlocalecontents(locale) %} {% for printing in content.cards %} {% if printing.card == card %} {% for edition in set | getseteditions(locale) %}
+          <div class="col-3">
+            {{ cardcard.cardcard(card, printing, locale, edition, set) }}
+          </div>
+          {% endfor %} {% endif %} {% endfor %} {% endfor %} {% endfor %} {% endfor %}
+        </div>
+      </div>
     </div>
     {% endif %}
   </div>

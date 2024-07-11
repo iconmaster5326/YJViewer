@@ -1,0 +1,60 @@
+{% extends "page.j2" %} {% import "fragments/cardcard.j2" as cardcard %}
+
+<span>{% block title %}Search Results - YGOJSON{% endblock %}</span>
+
+{% block contents %}
+<div class="container">
+  <div class="row">
+    <h1 class="col-auto fw-bold text-decoration-underline">Search Results</h1>
+    <div class="col text-end align-self-end">
+      <div>Searching for: things whose name contains "{{ query }}"</div>
+      <div>({{ results | length }}{% if (results | length) >= SEARCH_RESULTS_PER_PAGE %}+{% endif %} results returned)</div>
+    </div>
+  </div>
+  <div class="row g-1">
+    {% for result in results %}
+    <div class="col-3">
+      {% if result is oftypecard %}
+      {{ cardcard.cardcard(result, subtitle_override="Card", cardcssclasses="h-100") }}
+      {% elif result is oftypeset %}
+      <a href="/set/{{ result.id }}">
+        <div class="card m-1 p-0 h-100">
+          <div class="card-body">
+            <img class="card-img-top" src="{{ result | setgenericimage }}" />
+            <h5 class="card-title">{{ result.name["en"] }}</h5>
+            <h6 class="card-subtitle text-body-secondary">Set</h6>
+          </div>
+        </div>
+      </a>
+      {% elif result is oftypeseries %}
+      <a href="/series/{{ result.id }}">
+        <div class="card m-1 p-0 h-100">
+          <div class="card-body">
+            <img class="card-img-top" src="{{ result | seriesgenericimage }}" />
+            <h5 class="card-title">{{ result.name["en"] }}</h5>
+            <h6 class="card-subtitle text-body-secondary">Series</h6>
+          </div>
+        </div>
+      </a>
+      {% elif result is oftypeproduct %}
+      <a href="/product/{{ result.id }}">
+        <div class="card m-1 p-0 h-100">
+          <div class="card-body">
+            <img class="card-img-top" src="{{ result | setgenericimage }}" />
+            <h5 class="card-title">{{ result.name["en"] }}</h5>
+            <h6 class="card-subtitle text-body-secondary">Sealed product</h6>
+          </div>
+        </div>
+      </a>
+      {% else %}
+      <div class="card m-1 p-0 h-100">
+        <div class="card-body">
+          <h5 class="card-title">(Error: Unknown item {{ result.id }})</h5>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

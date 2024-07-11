@@ -353,7 +353,7 @@ def setgenericboximage(set_: ygojson.Set) -> str:
 
 
 @app.template_filter()
-def setgenericimage(set_: ygojson.Set) -> str:
+def setgenericpackimage(set_: ygojson.Set) -> str:
     for preferred_locale in ["en", "na", "ja", "jp"]:
         if preferred_locale in set_.locales and set_.locales[preferred_locale].image:
             return set_.locales[preferred_locale].image or ""
@@ -363,7 +363,17 @@ def setgenericimage(set_: ygojson.Set) -> str:
     for content in set_.contents:
         if content.image:
             return content.image
-    return setgenericboximage(set_)
+    return ""
+
+
+@app.template_filter()
+def setgenericimage(set_: ygojson.Set) -> str:
+    return setgenericpackimage(set_) or setgenericboximage(set_) or CARD_BACK_URL
+
+
+@app.template_filter()
+def seriesgenericimage(series: ygojson.Series) -> str:
+    return CARD_BACK_URL
 
 
 @app.template_filter()
@@ -371,6 +381,31 @@ def setformats(set_: ygojson.Set) -> typing.Iterable[ygojson.Format]:
     return {
         f for l in set_.contents for f in l.formats
     }  # TODO: stop using deprecated member
+
+
+@app.template_test()
+def oftypecard(thing) -> bool:
+    return type(thing) == ygojson.Card
+
+
+@app.template_test()
+def oftypeset(thing) -> bool:
+    return type(thing) == ygojson.Set
+
+
+@app.template_test()
+def oftypeseries(thing) -> bool:
+    return type(thing) == ygojson.Series
+
+
+@app.template_test()
+def oftypedistro(thing) -> bool:
+    return type(thing) == ygojson.PackDistrobution
+
+
+@app.template_test()
+def oftypeproduct(thing) -> bool:
+    return type(thing) == ygojson.SealedProduct
 
 
 @app.route("/")
@@ -422,4 +457,68 @@ def series(uuid: uuid.UUID):
         "series.j2",
         ygodb=ygodb,
         series=ygodb.series_by_id[uuid],
+    )
+
+
+def sort_search_result(
+    thing: typing.Union[
+        ygojson.Card, ygojson.Set, ygojson.Series, ygojson.SealedProduct
+    ]
+):
+    if type(thing) is ygojson.Card:
+        return (1, thing.text["en"].name)
+    elif type(thing) is ygojson.Set:
+        return (2, thing.name["en"])
+    elif type(thing) is ygojson.Series:
+        return (4, thing.name["en"])
+    elif type(thing) is ygojson.SealedProduct:
+        return (3, thing.name["en"])
+    else:
+        return (5, thing)
+
+
+SEARCH_RESULTS_PER_PAGE = 200
+
+
+def do_search(
+    query: str,
+) -> typing.Iterable[
+    typing.Union[ygojson.Card, ygojson.Set, ygojson.Series, ygojson.SealedProduct]
+]:
+    query_normalized = query.strip().lower()
+    result = set()
+
+    for card in ygodb.cards:
+        if query_normalized in card.text["en"].name.lower():
+            result.add(card)
+            if len(result) >= SEARCH_RESULTS_PER_PAGE:
+                return sorted(result, key=sort_search_result)[:SEARCH_RESULTS_PER_PAGE]
+    for set_ in ygodb.sets:
+        if query_normalized in set_.name["en"].lower():
+            result.add(set_)
+            if len(result) >= SEARCH_RESULTS_PER_PAGE:
+                return sorted(result, key=sort_search_result)[:SEARCH_RESULTS_PER_PAGE]
+    for series in ygodb.series:
+        if query_normalized in series.name["en"].lower():
+            result.add(series)
+            if len(result) >= SEARCH_RESULTS_PER_PAGE:
+                return sorted(result, key=sort_search_result)[:SEARCH_RESULTS_PER_PAGE]
+    for product in ygodb.products:
+        if query_normalized in product.name["en"].lower():
+            result.add(product)
+            if len(result) >= SEARCH_RESULTS_PER_PAGE:
+                return sorted(result, key=sort_search_result)[:SEARCH_RESULTS_PER_PAGE]
+
+    return sorted(result, key=sort_search_result)
+
+
+@app.route("/search")
+def search():
+    query = flask.request.args.get("query", "")
+    return flask.render_template(
+        "search.j2",
+        ygodb=ygodb,
+        query=query,
+        results=do_search(query),
+        SEARCH_RESULTS_PER_PAGE=SEARCH_RESULTS_PER_PAGE,
     )

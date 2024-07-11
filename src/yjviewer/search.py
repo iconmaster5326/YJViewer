@@ -1,3 +1,4 @@
+import datetime
 import enum
 import os
 import typing
@@ -42,7 +43,6 @@ class Sort:
 class FilterMode(enum.Enum):
     DEFAULT = ":"
     EQ = "="
-    NE = "!="
     LT = "<"
     LE = "<="
     GT = ">"
@@ -133,6 +133,9 @@ class QueryParser(lark.Transformer):
             FILTER_NAME_MAP[filtername_normalized], FilterMode(cmpop), word
         )
 
+    def parens(self, data) -> typing.Any:
+        return data
+
     def alternation(self, data) -> typing.Any:
         return TermOr([*_flatten(data)])
 
@@ -157,7 +160,8 @@ class Search:
         self.sorts = []
 
         tree = LANGUAGE.parse(query)
-        parsed = QueryParser(self).transform(tree)
+        # print(tree.pretty())
+        QueryParser(self).transform(tree)
 
         if not self.sorts:
             self.sorts = [Sort(SorterClass, SortDir.ASC), Sort(SorterName, SortDir.ASC)]
@@ -254,22 +258,28 @@ class FilterName(Filter):
         results: typing.Iterable[Thing],
     ) -> typing.Iterable[Thing]:
         query_normalized = predicate.value.strip().lower()
-        if predicate.mode not in {FilterMode.DEFAULT, FilterMode.EQ}:
+
+        def cmp(s: str) -> bool:
+            if predicate.mode == FilterMode.DEFAULT:
+                return query_normalized in s
+            elif predicate.mode == FilterMode.EQ:
+                return query_normalized == s
             raise SearchFailedException(
                 f"Search filter 'name' does not accept filter mode '{predicate.mode.value}'!"
             )
+
         for result in results:
             if type(result) is ygojson.Card:
-                if query_normalized in result.text["en"].name.lower():
+                if cmp(result.text["en"].name.lower()):
                     yield result
             elif type(result) is ygojson.Set:
-                if query_normalized in result.name["en"].lower():
+                if cmp(result.name["en"].lower()):
                     yield result
             elif type(result) is ygojson.Series:
-                if query_normalized in result.name["en"].lower():
+                if cmp(result.name["en"].lower()):
                     yield result
             elif type(result) is ygojson.SealedProduct:
-                if query_normalized in result.name["en"].lower():
+                if cmp(result.name["en"].lower()):
                     yield result
 
 
@@ -318,9 +328,290 @@ Accaptable values include 'card' (or 'c'), 'pack'/'set' or ('s'), 'sealed'/'prod
                 yield result
 
 
+class FilterType(Filter):
+    names = ["type", "t"]
+
+    @classmethod
+    def execute(
+        cls,
+        db: ygojson.Database,
+        predicate: "TermPredicate",
+        results: typing.Iterable[Thing],
+    ) -> typing.Iterable[Thing]:
+        query_normalized = predicate.value.strip().lower()
+
+        def cmp(s: str) -> bool:
+            if predicate.mode == FilterMode.DEFAULT:
+                return query_normalized in s
+            elif predicate.mode == FilterMode.EQ:
+                return query_normalized in s.split("\n")
+            raise SearchFailedException(
+                f"Search filter 'type' does not accept filter mode '{predicate.mode.value}'!"
+            )
+
+        for result in results:
+            if type(result) is ygojson.Card:
+                if cmp(
+                    "\n".join(
+                        [
+                            result.card_type.value,
+                            result.type.value if result.type else "",
+                            result.subcategory.value if result.subcategory else "",
+                            result.character if result.character else "",
+                            result.skill_type if result.skill_type else "",
+                            *[t.value for t in result.monster_card_types or []],
+                            *[t.value for t in result.classifications or []],
+                            *[t.value for t in result.abilities or []],
+                        ]
+                    )
+                ):
+                    yield result
+
+
+class FilterAttribute(Filter):
+    names = ["attribute", "attr", "a"]
+
+    @classmethod
+    def execute(
+        cls,
+        db: ygojson.Database,
+        predicate: "TermPredicate",
+        results: typing.Iterable[Thing],
+    ) -> typing.Iterable[Thing]:
+        query_normalized = predicate.value.strip().lower()
+
+        def cmp(s: str) -> bool:
+            if predicate.mode == FilterMode.DEFAULT:
+                return query_normalized in s
+            elif predicate.mode == FilterMode.EQ:
+                return query_normalized == s
+            raise SearchFailedException(
+                f"Search filter 'attribute' does not accept filter mode '{predicate.mode.value}'!"
+            )
+
+        for result in results:
+            if type(result) is ygojson.Card:
+                if result.attribute and cmp(result.attribute.value):
+                    yield result
+
+
+class FilterInt(Filter):
+    @classmethod
+    def get_int_prop(
+        cls, db: ygojson.Database, predicate: "TermPredicate", result: Thing
+    ) -> typing.Union[None, int, str]:
+        raise NotImplementedError
+
+    @classmethod
+    def execute(
+        cls,
+        db: ygojson.Database,
+        predicate: "TermPredicate",
+        results: typing.Iterable[Thing],
+    ) -> typing.Iterable[Thing]:
+        query_normalized = predicate.value.strip().lower()
+
+        def cmp(s: typing.Union[str, int]) -> bool:
+            try:
+                query_int = int(query_normalized)
+                if (
+                    predicate.mode == FilterMode.DEFAULT
+                    or predicate.mode == FilterMode.EQ
+                ):
+                    return query_int == s
+                elif predicate.mode == FilterMode.GT and type(s) is int:
+                    return s > query_int
+                elif predicate.mode == FilterMode.GE and type(s) is int:
+                    return s >= query_int
+                elif predicate.mode == FilterMode.LT and type(s) is int:
+                    return s < query_int
+                elif predicate.mode == FilterMode.LE and type(s) is int:
+                    return s <= query_int
+                return False
+            except ValueError:
+                if (
+                    predicate.mode == FilterMode.DEFAULT
+                    or predicate.mode == FilterMode.EQ
+                ):
+                    return query_normalized == s
+                raise SearchFailedException(
+                    f"Search filter '{cls.names[0]}' does not accept filter mode '{predicate.mode.value}' for non-number values!"
+                )
+
+        for result in results:
+            value = cls.get_int_prop(db, predicate, result)
+            if value is not None and cmp(value):
+                yield result
+
+
+class FilterATK(FilterInt):
+    names = ["attack", "atk", "at"]
+
+    @classmethod
+    def get_int_prop(
+        cls, db: ygojson.Database, predicate: "TermPredicate", result: Thing
+    ) -> typing.Union[None, int, str]:
+        if type(result) is ygojson.Card:
+            return result.atk
+        return None
+
+
+class FilterDEF(FilterInt):
+    names = ["defence", "defense", "def", "de"]
+
+    @classmethod
+    def get_int_prop(
+        cls, db: ygojson.Database, predicate: "TermPredicate", result: Thing
+    ) -> typing.Union[None, int, str]:
+        if type(result) is ygojson.Card:
+            return result.def_
+        return None
+
+
+class FilterLevel(FilterInt):
+    names = ["level", "lvl", "lv", "l"]
+
+    @classmethod
+    def get_int_prop(
+        cls, db: ygojson.Database, predicate: "TermPredicate", result: Thing
+    ) -> typing.Union[None, int, str]:
+        if type(result) is ygojson.Card:
+            return result.level
+        return None
+
+
+class FilterRank(FilterInt):
+    names = ["rank", "r"]
+
+    @classmethod
+    def get_int_prop(
+        cls, db: ygojson.Database, predicate: "TermPredicate", result: Thing
+    ) -> typing.Union[None, int, str]:
+        if type(result) is ygojson.Card:
+            return result.rank
+        return None
+
+
+class FilterScale(FilterInt):
+    names = ["scale", "sc"]
+
+    @classmethod
+    def get_int_prop(
+        cls, db: ygojson.Database, predicate: "TermPredicate", result: Thing
+    ) -> typing.Union[None, int, str]:
+        if type(result) is ygojson.Card:
+            return result.scale
+        return None
+
+
+class FilterLinkRating(FilterInt):
+    names = ["linkrating", "link", "lr"]
+
+    @classmethod
+    def get_int_prop(
+        cls, db: ygojson.Database, predicate: "TermPredicate", result: Thing
+    ) -> typing.Union[None, int, str]:
+        if type(result) is ygojson.Card:
+            return len(result.link_arrows or [])
+        return None
+
+
+def _date_to_timestamp(date: datetime.date) -> float:
+    return datetime.datetime(date.year, date.month, date.day).timestamp()
+
+
+class FilterDate(Filter):
+    @classmethod
+    def get_date_prop(
+        cls, db: ygojson.Database, predicate: "TermPredicate", result: Thing
+    ) -> typing.Optional[datetime.date]:
+        raise NotImplementedError
+
+    @classmethod
+    def execute(
+        cls,
+        db: ygojson.Database,
+        predicate: "TermPredicate",
+        results: typing.Iterable[Thing],
+    ) -> typing.Iterable[Thing]:
+        query_normalized = predicate.value.strip().lower()
+
+        def cmp(s: float) -> bool:
+            try:
+                query_timestamp = _date_to_timestamp(
+                    datetime.date.fromisoformat(query_normalized)
+                )
+                if (
+                    predicate.mode == FilterMode.DEFAULT
+                    or predicate.mode == FilterMode.EQ
+                ):
+                    return s == query_timestamp
+                elif predicate.mode == FilterMode.GT:
+                    return s > query_timestamp
+                elif predicate.mode == FilterMode.GE:
+                    return s >= query_timestamp
+                elif predicate.mode == FilterMode.LT:
+                    return s < query_timestamp
+                elif predicate.mode == FilterMode.LE:
+                    return s <= query_timestamp
+                return False
+            except ValueError:
+                raise SearchFailedException(
+                    f"Search filter '{cls.names[0]}' does not accept non-date values!\nDates are expected in ISO format (YYYY-MM-DD)."
+                )
+
+        for result in results:
+            value = cls.get_date_prop(db, predicate, result)
+            if value is not None and cmp(_date_to_timestamp(value)):
+                yield result
+
+
+class FilterDateOfRelease(FilterDate):
+    names = ["date", "d"]
+
+    @classmethod
+    def get_date_prop(
+        cls, db: ygojson.Database, predicate: "TermPredicate", result: Thing
+    ) -> typing.Optional[datetime.date]:
+        if type(result) is ygojson.Card:
+            dates = []
+            for set_ in result.sets:
+                locales: typing.Set[ygojson.SetLocale] = set()
+                for content in set_.contents:
+                    for printing in content.cards:
+                        if printing.card == result:
+                            locales.update(content.locales)
+                if not locales and set_.date:
+                    dates.append(set_.date)
+                for locale in locales:
+                    if locale.date:
+                        dates.append(locale.date)
+            if dates:
+                return min(dates)
+        elif type(result) is ygojson.Set or type(result) is ygojson.SealedProduct:
+            if result.date:
+                return result.date
+            dates = [x.date for x in result.locales.values() if x.date]
+            if dates:
+                return min(dates)
+        return None
+
+
 FILTERS = [
     FilterName,
     FilterClass,
+    FilterType,
+    FilterAttribute,
+    FilterATK,
+    FilterDEF,
+    FilterLevel,
+    FilterScale,
+    FilterLinkRating,
+    FilterLevel,
+    FilterRank,
+    FilterScale,
+    FilterLinkRating,
+    FilterDateOfRelease,
 ]
 
 FILTER_NAME_MAP = {name: filter for filter in FILTERS for name in filter.names}

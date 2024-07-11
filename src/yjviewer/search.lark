@@ -2,18 +2,18 @@ start: term*
 ?term: alternation | negation | parens | predicate
 
 ?predicate: predicate_full | predicate_class | predicate_simple
-predicate_simple: word
-predicate_class: CMPOP word
-predicate_full: word CMPOP word
+predicate_simple.0: word
+predicate_class.1: CMPOP word
+predicate_full.2: word CMPOP word
 
-?parens: "(" term* ")"
+parens: "(" term* ")"
 alternation: term ("|" term)+
 negation: "-" term
 
 ?word: WORD | ESCAPED_STRING
 
-WORD: /[^\s:<>!=\(\)"\|\-][^\s:<>!=\(\)"\|]*/
-CMPOP: /(:|!?=|=|>=?|<=?)/
+WORD: /[^\s:<>=\(\)"\|\-][^\s:<>=\(\)"\|]*/
+CMPOP: /(:|=|>=?|<=?)/
 %import common.ESCAPED_STRING
 
 %ignore /\s+/

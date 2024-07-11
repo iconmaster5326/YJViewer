@@ -69,16 +69,50 @@ class Term:
         raise NotImplementedError
 
 
+def _flatten(xs):
+    if not isinstance(xs, list):
+        yield xs
+        return
+    for x in xs:
+        yield from _flatten(x)
+
+
 class QueryParser(lark.Transformer):
     def __init__(self, search: "Search") -> None:
         super().__init__(True)
         self.search = search
 
     def start(self, data) -> typing.Any:
-        self.search.terms.extend(data)
+        self.search.terms.extend(_flatten(data))
 
-    def WORD(self, data) -> typing.Any:
-        return TermPredicate(FilterName, FilterMode.DEFAULT, str(data))
+    def predicate_simple(self, data) -> typing.Any:
+        (word,) = data
+        return TermPredicate(FilterName, FilterMode.DEFAULT, word)
+
+    def predicate_class(self, data) -> typing.Any:
+        (cmpop, word) = data
+        return TermPredicate(FilterClass, FilterMode(cmpop), word)
+
+    def predicate_full(self, data) -> typing.Any:
+        (filtername, cmpop, word) = data
+        filtername_normalized = filtername.strip().lower()
+        if filtername_normalized not in FILTER_NAME_MAP:
+            raise SearchFailedException(f"Unknown filter '{filtername}'!")
+        return TermPredicate(
+            FILTER_NAME_MAP[filtername_normalized], FilterMode(cmpop), word
+        )
+
+    def alternation(self, data) -> typing.Any:
+        return TermOr([*_flatten(data)])
+
+    def negation(self, data) -> typing.Any:
+        return TermNegate([*_flatten(data)])
+
+    def WORD(self, token) -> typing.Any:
+        return str(token)
+
+    def ESCAPED_STRING(self, token) -> typing.Any:
+        return str(token)[1:-1]
 
 
 class Search:
@@ -191,7 +225,7 @@ class FilterName(Filter):
         query_normalized = predicate.value.strip().lower()
         if predicate.mode not in {FilterMode.DEFAULT, FilterMode.EQ}:
             raise SearchFailedException(
-                f"Search filter 'name' does not accept filer mode '{predicate.mode.value}'!"
+                f"Search filter 'name' does not accept filter mode '{predicate.mode.value}'!"
             )
         for result in results:
             if type(result) is ygojson.Card:
@@ -208,9 +242,57 @@ class FilterName(Filter):
                     yield result
 
 
+FILTER_CLASS_OPTIONS = {
+    "card": ygojson.Card,
+    "c": ygojson.Card,
+    "set": ygojson.Set,
+    "pack": ygojson.Set,
+    "s": ygojson.Set,
+    "product": ygojson.SealedProduct,
+    "sealed": ygojson.SealedProduct,
+    "sealedproduct": ygojson.SealedProduct,
+    "sealed-product": ygojson.SealedProduct,
+    "sealed_product": ygojson.SealedProduct,
+    "p": ygojson.SealedProduct,
+    "sp": ygojson.SealedProduct,
+    "series": ygojson.Series,
+    "archetype": ygojson.Series,
+    "a": ygojson.Series,
+}
+
+
+class FilterClass(Filter):
+    names = ["class", "cl", ""]
+
+    @classmethod
+    def execute(
+        cls,
+        db: ygojson.Database,
+        predicate: "TermPredicate",
+        results: typing.Iterable[Thing],
+    ) -> typing.Iterable[Thing]:
+        query_normalized = predicate.value.strip().lower()
+        if predicate.mode not in {FilterMode.DEFAULT, FilterMode.EQ}:
+            raise SearchFailedException(
+                f"Search filter 'class' does not accept filter mode '{predicate.mode.value}'!"
+            )
+        if query_normalized not in FILTER_CLASS_OPTIONS:
+            raise SearchFailedException(
+                f"""Search filter 'class' does not accept value '{query_normalized}'!
+Accaptable values include 'card' (or 'c'), 'pack'/'set' or ('s'), 'sealed'/'product' (or 'p'), or 'series'/'archetype' (or 'a')."""
+            )
+        clazz = FILTER_CLASS_OPTIONS[query_normalized]
+        for result in results:
+            if type(result) is clazz:
+                yield result
+
+
 FILTERS = [
     FilterName,
+    FilterClass,
 ]
+
+FILTER_NAME_MAP = {name: filter for filter in FILTERS for name in filter.names}
 
 ###################
 # SORTERS
@@ -261,3 +343,5 @@ SORTERS = [
     SorterClass,
     SorterName,
 ]
+
+SORTER_NAME_MAP = {name: sorter for sorter in SORTERS for name in sorter.names}

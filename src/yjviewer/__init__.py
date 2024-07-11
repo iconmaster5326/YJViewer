@@ -11,6 +11,8 @@ import jinja2.filters
 import tqdm
 import ygojson
 
+import yjviewer.search as search
+
 from .version import __version__
 
 if os.path.exists(ygojson.AGGREGATE_DIR):
@@ -461,64 +463,22 @@ def series(uuid: uuid.UUID):
     )
 
 
-def sort_search_result(
-    thing: typing.Union[
-        ygojson.Card, ygojson.Set, ygojson.Series, ygojson.SealedProduct
-    ]
-):
-    if type(thing) is ygojson.Card:
-        return (1, thing.text["en"].name)
-    elif type(thing) is ygojson.Set:
-        return (2, thing.name["en"])
-    elif type(thing) is ygojson.Series:
-        return (4, thing.name["en"])
-    elif type(thing) is ygojson.SealedProduct:
-        return (3, thing.name["en"])
-    else:
-        return (5, thing)
-
-
-SEARCH_RESULTS_PER_PAGE = 200
-
-
-def do_search(
-    query: str,
-) -> typing.List[
-    typing.Union[ygojson.Card, ygojson.Set, ygojson.Series, ygojson.SealedProduct]
-]:
-    query_normalized = query.strip().lower()
-    result = set()
-
-    for card in ygodb.cards:
-        if query_normalized in card.text["en"].name.lower():
-            result.add(card)
-    for set_ in ygodb.sets:
-        if query_normalized in set_.name["en"].lower():
-            result.add(set_)
-    for series in ygodb.series:
-        if query_normalized in series.name["en"].lower():
-            result.add(series)
-    for product in ygodb.products:
-        if query_normalized in product.name["en"].lower():
-            result.add(product)
-
-    return sorted(result, key=sort_search_result)
-
-
 @app.route("/search")
-def search():
+def search_():
     query = flask.request.args.get("query", "")
     page = int(flask.request.args.get("page", "1"))
-    results = do_search(query)
+    search_ = search.Search(query)
+    results = search_.execute(ygodb)
     return flask.render_template(
         "search.j2",
         ygodb=ygodb,
         query=query,
-        results=results[SEARCH_RESULTS_PER_PAGE * (page - 1) :][
-            :SEARCH_RESULTS_PER_PAGE
+        results=results[search.SEARCH_RESULTS_PER_PAGE * (page - 1) :][
+            : search.SEARCH_RESULTS_PER_PAGE
         ],
         n_results=len(results),
-        SEARCH_RESULTS_PER_PAGE=SEARCH_RESULTS_PER_PAGE,
+        SEARCH_RESULTS_PER_PAGE=search.SEARCH_RESULTS_PER_PAGE,
         page=page,
-        n_pages=math.ceil(len(results) / SEARCH_RESULTS_PER_PAGE),
+        n_pages=math.ceil(len(results) / search.SEARCH_RESULTS_PER_PAGE),
+        human_readable_query=search_.human_readable_query(),
     )

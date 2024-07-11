@@ -3,6 +3,7 @@ import enum
 import math
 import os
 import random
+import time
 import typing
 import uuid
 
@@ -393,9 +394,43 @@ def oftypeproduct(thing) -> bool:
     return type(thing) == ygojson.SealedProduct
 
 
+page_load_start_time = time.time()
+
+
+@app.before_request
+def before_request():
+    global page_load_start_time
+    page_load_start_time = time.time()
+
+
+@app.after_request
+def after_request(response):
+    diff = time.time() - page_load_start_time
+    if (
+        (response.response)
+        and (200 <= response.status_code < 300)
+        and (response.content_type.startswith("text/html"))
+    ):
+        response.set_data(
+            response.get_data().replace(
+                b"__EXECUTION_TIME__", bytes(f"{diff:.4f}", "utf-8")
+            )
+        )
+    return response
+
+
+def common_template_vars():
+    return {
+        "yjv_version": __version__,
+        "db_version": ygojson.__version__,
+        "schema_version": ygojson.SCHEMA_VERSION,
+        "accesstime": datetime.datetime.now().isoformat(),
+    }
+
+
 @app.route("/")
 def index():
-    return flask.render_template("index.j2", ygodb=ygodb)
+    return flask.render_template("index.j2", **common_template_vars(), ygodb=ygodb)
 
 
 @app.route("/random-card")
@@ -412,6 +447,7 @@ def random_card():
 def card(uuid: uuid.UUID):
     return flask.render_template(
         "card.j2",
+        **common_template_vars(),
         ygodb=ygodb,
         card=ygodb.cards_by_id[uuid],
     )
@@ -431,6 +467,7 @@ def random_set():
 def set_(uuid: uuid.UUID):
     return flask.render_template(
         "set.j2",
+        **common_template_vars(),
         ygodb=ygodb,
         set=ygodb.sets_by_id[uuid],
     )
@@ -440,6 +477,7 @@ def set_(uuid: uuid.UUID):
 def series(uuid: uuid.UUID):
     return flask.render_template(
         "series.j2",
+        **common_template_vars(),
         ygodb=ygodb,
         series=ygodb.series_by_id[uuid],
     )
@@ -453,6 +491,7 @@ def search_():
     results = search_.execute(ygodb)
     return flask.render_template(
         "search.j2",
+        **common_template_vars(),
         ygodb=ygodb,
         query=query,
         results=results[search.SEARCH_RESULTS_PER_PAGE * (page - 1) :][

@@ -45,10 +45,51 @@
           <div class="collapse navbar-collapse" id="navbarSupportedContent">
             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
               <li class="nav-item">
-                <a class="nav-link" href="/random-card">Random Card</a>
+                <a class="nav-link" href="/search?query=:card">Cards</a>
               </li>
               <li class="nav-item">
-                <a class="nav-link" href="/random-set">Random Set</a>
+                <a class="nav-link" href="/search?query=:set">Sets</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="/search?query=:product"
+                  >Sealed Products</a
+                >
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="/search?query=:series"
+                  >Series/Archetypes</a
+                >
+              </li>
+              <li class="nav-item dropdown">
+                <a
+                  class="nav-link dropdown-toggle"
+                  href="#"
+                  role="button"
+                  data-bs-toggle="dropdown"
+                  aria-expanded="false"
+                >
+                  Random
+                </a>
+                <ul class="dropdown-menu">
+                  <li><a class="dropdown-item" href="/random-card">Card</a></li>
+                  <li><a class="dropdown-item" href="/random-set">Set</a></li>
+                  <li>
+                    <a class="dropdown-item" href="/random-product"
+                      >Sealed Product</a
+                    >
+                  </li>
+                  <li>
+                    <a class="dropdown-item" href="/random-series"
+                      >Series/Archetype</a
+                    >
+                  </li>
+                </ul>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="/about">About</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="/syntax">Syntax</a>
               </li>
             </ul>
             <form action="/search" class="d-flex" role="search">
@@ -70,5 +111,29 @@
       </nav>
       <div class="row">{% block contents required %}{% endblock %}</div>
     </div>
+    <footer
+      class="fixed-bottom bg-body-tertiary container"
+      style="font-size: small"
+    >
+      <div class="row">
+        <div class="col">
+          <a href="https://github.com/iconmaster5326/YJVeiwer">YJVeiwer</a>
+          {{ yjv_version }}, powered by
+          <a href="https://github.com/iconmaster5326/YGOJSON">YGOJSON</a> {{ db_version }},
+          schema version v{{ schema_version }}.
+        </div>
+        <div class="col text-end">Page accessed at {{ accesstime }}.</div>
+      </div>
+      <div class="row">
+        <div class="col">
+          Images and data provided by:
+          <a href="https://yugipedia.com">Yugipedia</a>
+          <a href="https://ygoprodeck.com">YGOPRODECK</a>
+          <a href="https://github.com/DawnbrandBots/yaml-yugi">Yaml Yugi</a>
+          <a href="https://www.ygoprog.com">YGO Prog</a>
+        </div>
+        <div class="col text-end">Time to load page: __EXECUTION_TIME__s.</div>
+      </div>
+    </footer>
   </body>
 </html>

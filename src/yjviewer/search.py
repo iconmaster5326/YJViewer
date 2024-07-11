@@ -8,6 +8,8 @@ import typing
 import lark
 import ygojson
 
+from .locales import LOCALE_TRANSLATED
+
 SEARCH_RESULTS_PER_PAGE = 200
 
 Thing = typing.Union[ygojson.Card, ygojson.Set, ygojson.Series, ygojson.SealedProduct]
@@ -31,6 +33,10 @@ class Sorter:
     ) -> typing.Any:
         raise NotImplementedError
 
+    @classmethod
+    def human_readable_query(cls, search: "Search") -> str:
+        raise NotImplementedError
+
 
 class Sort:
     sorter: typing.Type[Sorter]
@@ -44,6 +50,12 @@ class Sort:
         self, db: ygojson.Database, search: "Search", result: Thing
     ) -> typing.Any:
         return self.sorter.execute(search, db, result, self.dir)
+
+    def human_readable_query(self, search: "Search") -> str:
+        if self.dir == SortDir.ASC:
+            return self.sorter.human_readable_query(search)
+        else:
+            return self.sorter.human_readable_query(search) + " (descending)"
 
 
 class FilterMode(enum.Enum):
@@ -68,11 +80,18 @@ class Filter:
     ) -> typing.Iterable[Thing]:
         raise NotImplementedError
 
+    @classmethod
+    def human_readable_query(cls, search: "Search", predicate: "TermPredicate") -> str:
+        raise NotImplementedError
+
 
 class Term:
     def execute(
         self, db: ygojson.Database, search: "Search", results: typing.Iterable[Thing]
     ) -> typing.Iterable[Thing]:
+        raise NotImplementedError
+
+    def human_readable_query(self, search: "Search") -> str:
         raise NotImplementedError
 
 
@@ -181,7 +200,19 @@ class Search:
             self.sorts = [Sort(SorterClass, SortDir.ASC), Sort(SorterName, SortDir.ASC)]
 
     def human_readable_query(self) -> str:
-        return f"things whose name contains '{self.query}'"
+        result = "all things"
+        if self.terms:
+            result += " "
+            result += " AND ".join(x.human_readable_query(self) for x in self.terms)
+        if self.sorts:
+            result += ", sorted by "
+            result += " and then ".join(
+                x.human_readable_query(self) for x in self.sorts
+            )
+        if self.locales:
+            result += ", in "
+            result += " / ".join(LOCALE_TRANSLATED.get(x, x) for x in self.locales)
+        return result
 
     def _exclude_cards_out_of_locale(
         self, results: typing.Iterable[ygojson.Card]
@@ -258,6 +289,9 @@ class TermPredicate(Term):
     ) -> typing.Iterable[Thing]:
         return self.filter.execute(db, search, self, results)
 
+    def human_readable_query(self, search: "Search") -> str:
+        return self.filter.human_readable_query(search, self)
+
 
 class TermOr(Term):
     terms: typing.List[Term]
@@ -274,6 +308,11 @@ class TermOr(Term):
                 if [*term.execute(db, search, [result])]:
                     yield result
                     break
+
+    def human_readable_query(self, search: "Search") -> str:
+        return (
+            "(" + " OR ".join(x.human_readable_query(search) for x in self.terms) + ")"
+        )
 
 
 class TermNegate(Term):
@@ -292,6 +331,13 @@ class TermNegate(Term):
                 subresults = [*term.execute(db, search, subresults)]
             if not subresults:
                 yield result
+
+    def human_readable_query(self, search: "Search") -> str:
+        return (
+            "NOT ("
+            + " AND ".join(x.human_readable_query(search) for x in self.terms)
+            + ")"
+        )
 
 
 ###################
@@ -347,6 +393,15 @@ class FilterName(Filter):
                 ):
                     yield result
 
+    @classmethod
+    def human_readable_query(cls, search: "Search", predicate: "TermPredicate") -> str:
+        if predicate.mode == FilterMode.DEFAULT:
+            return f"whose name contains '{predicate.value}'"
+        elif predicate.mode == FilterMode.EQ:
+            return f"named '{predicate.value}'"
+        else:
+            return f"<ERROR: bad mode '{predicate.mode.value}'>"
+
 
 class FilterEffect(Filter):
     names = ["effect", "e"]
@@ -387,6 +442,15 @@ class FilterEffect(Filter):
                 ):
                     yield result
 
+    @classmethod
+    def human_readable_query(cls, search: "Search", predicate: "TermPredicate") -> str:
+        if predicate.mode == FilterMode.DEFAULT:
+            return f"whose effect contains '{predicate.value}'"
+        elif predicate.mode == FilterMode.EQ:
+            return f"whose effect is '{predicate.value}'"
+        else:
+            return f"<ERROR: bad mode '{predicate.mode.value}'>"
+
 
 FILTER_CLASS_OPTIONS = {
     "card": ygojson.Card,
@@ -404,6 +468,13 @@ FILTER_CLASS_OPTIONS = {
     "series": ygojson.Series,
     "archetype": ygojson.Series,
     "a": ygojson.Series,
+}
+
+THING_NAMES = {
+    ygojson.Card: "cards",
+    ygojson.Set: "sets",
+    ygojson.SealedProduct: "sealed products",
+    ygojson.Series: "series/archetypes",
 }
 
 
@@ -432,6 +503,13 @@ Accaptable values include 'card' (or 'c'), 'pack'/'set' or ('s'), 'sealed'/'prod
         for result in results:
             if type(result) is clazz:
                 yield result
+
+    @classmethod
+    def human_readable_query(cls, search: "Search", predicate: "TermPredicate") -> str:
+        thingtype = FILTER_CLASS_OPTIONS.get(predicate.value.strip().lower())
+        if not thingtype:
+            return f"<ERROR: bad value '{predicate.value}'>"
+        return f"that are {THING_NAMES[thingtype]}"
 
 
 class FilterType(Filter):
@@ -474,6 +552,15 @@ class FilterType(Filter):
                 ):
                     yield result
 
+    @classmethod
+    def human_readable_query(cls, search: "Search", predicate: "TermPredicate") -> str:
+        if predicate.mode == FilterMode.DEFAULT:
+            return f"whose typeline contains '{predicate.value}'"
+        elif predicate.mode == FilterMode.EQ:
+            return f"whose typeline contains exactly '{predicate.value}'"
+        else:
+            return f"<ERROR: bad mode '{predicate.mode.value}'>"
+
 
 class FilterAttribute(Filter):
     names = ["attribute", "attr", "a"]
@@ -501,6 +588,10 @@ class FilterAttribute(Filter):
             if type(result) is ygojson.Card:
                 if result.attribute and cmp(result.attribute.value):
                     yield result
+
+    @classmethod
+    def human_readable_query(cls, search: "Search", predicate: "TermPredicate") -> str:
+        return f"whose attribute is '{predicate.value}'"
 
 
 class FilterInt(Filter):
@@ -553,6 +644,16 @@ class FilterInt(Filter):
                 yield result
 
 
+FILTER_MODE_TO_NAME = {
+    FilterMode.DEFAULT: "is",
+    FilterMode.EQ: "is exactly",
+    FilterMode.GT: "is greater than",
+    FilterMode.LT: "is less than",
+    FilterMode.GE: "is greater than or equal to",
+    FilterMode.LE: "is less than or equal to",
+}
+
+
 class FilterATK(FilterInt):
     names = ["attack", "atk", "at"]
 
@@ -563,6 +664,10 @@ class FilterATK(FilterInt):
         if type(result) is ygojson.Card:
             return result.atk
         return None
+
+    @classmethod
+    def human_readable_query(cls, search: "Search", predicate: "TermPredicate") -> str:
+        return f"whose ATK {FILTER_MODE_TO_NAME[predicate.mode]} {predicate.value}"
 
 
 class FilterDEF(FilterInt):
@@ -576,6 +681,10 @@ class FilterDEF(FilterInt):
             return result.def_
         return None
 
+    @classmethod
+    def human_readable_query(cls, search: "Search", predicate: "TermPredicate") -> str:
+        return f"whose DEF {FILTER_MODE_TO_NAME[predicate.mode]} {predicate.value}"
+
 
 class FilterLevel(FilterInt):
     names = ["level", "lvl", "lv", "l"]
@@ -587,6 +696,10 @@ class FilterLevel(FilterInt):
         if type(result) is ygojson.Card:
             return result.level
         return None
+
+    @classmethod
+    def human_readable_query(cls, search: "Search", predicate: "TermPredicate") -> str:
+        return f"whose level {FILTER_MODE_TO_NAME[predicate.mode]} {predicate.value}"
 
 
 class FilterRank(FilterInt):
@@ -600,6 +713,10 @@ class FilterRank(FilterInt):
             return result.rank
         return None
 
+    @classmethod
+    def human_readable_query(cls, search: "Search", predicate: "TermPredicate") -> str:
+        return f"whose rank {FILTER_MODE_TO_NAME[predicate.mode]} {predicate.value}"
+
 
 class FilterScale(FilterInt):
     names = ["scale", "sc"]
@@ -611,6 +728,10 @@ class FilterScale(FilterInt):
         if type(result) is ygojson.Card:
             return result.scale
         return None
+
+    @classmethod
+    def human_readable_query(cls, search: "Search", predicate: "TermPredicate") -> str:
+        return f"whose pendulum scale {FILTER_MODE_TO_NAME[predicate.mode]} {predicate.value}"
 
 
 class FilterLinkRating(FilterInt):
@@ -624,9 +745,25 @@ class FilterLinkRating(FilterInt):
             return len(result.link_arrows or [])
         return None
 
+    @classmethod
+    def human_readable_query(cls, search: "Search", predicate: "TermPredicate") -> str:
+        return (
+            f"whose link rating {FILTER_MODE_TO_NAME[predicate.mode]} {predicate.value}"
+        )
+
 
 def _date_to_timestamp(date: datetime.date) -> float:
     return datetime.datetime(date.year, date.month, date.day).timestamp()
+
+
+FILTER_MODE_TO_DATE_NAME = {
+    FilterMode.DEFAULT: "on",
+    FilterMode.EQ: "on exactly",
+    FilterMode.GT: "after",
+    FilterMode.LT: "before",
+    FilterMode.GE: "on or after",
+    FilterMode.LE: "on or before",
+}
 
 
 class FilterDate(Filter):
@@ -711,6 +848,10 @@ class FilterDateOfRelease(FilterDate):
     ) -> typing.Optional[datetime.date]:
         return _get_release_date(result)
 
+    @classmethod
+    def human_readable_query(cls, search: "Search", predicate: "TermPredicate") -> str:
+        return f"who were released {FILTER_MODE_TO_DATE_NAME[predicate.mode]} {predicate.value}"
+
 
 FILTERS = [
     FilterName,
@@ -756,6 +897,10 @@ class SorterClass(Sorter):
         else:
             return 5 * dir_factor
 
+    @classmethod
+    def human_readable_query(cls, search: "Search") -> str:
+        return "class"
+
 
 class SorterName(Sorter):
     names = ["names", "name", "n"]
@@ -792,6 +937,10 @@ class SorterName(Sorter):
         else:
             return tuple(-ord(c) for c in s)
 
+    @classmethod
+    def human_readable_query(cls, search: "Search") -> str:
+        return "name"
+
 
 class SorterATK(Sorter):
     names = ["attack", "atk", "at"]
@@ -812,6 +961,10 @@ class SorterATK(Sorter):
                 return -int(v)
         else:
             return sys.maxsize
+
+    @classmethod
+    def human_readable_query(cls, search: "Search") -> str:
+        return "ATK"
 
 
 class SorterDEF(Sorter):
@@ -834,6 +987,10 @@ class SorterDEF(Sorter):
         else:
             return sys.maxsize
 
+    @classmethod
+    def human_readable_query(cls, search: "Search") -> str:
+        return "DEF"
+
 
 class SorterLevel(Sorter):
     names = ["level", "lvl", "lv", "l"]
@@ -852,6 +1009,10 @@ class SorterLevel(Sorter):
                 return -int(v)
         else:
             return sys.maxsize
+
+    @classmethod
+    def human_readable_query(cls, search: "Search") -> str:
+        return "level"
 
 
 class SorterRank(Sorter):
@@ -872,6 +1033,10 @@ class SorterRank(Sorter):
         else:
             return sys.maxsize
 
+    @classmethod
+    def human_readable_query(cls, search: "Search") -> str:
+        return "rank"
+
 
 class SorterScale(Sorter):
     names = ["scale", "sc"]
@@ -891,6 +1056,10 @@ class SorterScale(Sorter):
         else:
             return sys.maxsize
 
+    @classmethod
+    def human_readable_query(cls, search: "Search") -> str:
+        return "pendulum scale"
+
 
 class SorterLink(Sorter):
     names = ["linkranking", "link", "lr"]
@@ -908,6 +1077,10 @@ class SorterLink(Sorter):
         else:
             return sys.maxsize
 
+    @classmethod
+    def human_readable_query(cls, search: "Search") -> str:
+        return "link rating"
+
 
 class SorterDate(Sorter):
     names = ["date", "d"]
@@ -923,6 +1096,10 @@ class SorterDate(Sorter):
             return _date_to_timestamp(date)
         elif dir == SortDir.DESC:
             return -_date_to_timestamp(date)
+
+    @classmethod
+    def human_readable_query(cls, search: "Search") -> str:
+        return "release date"
 
 
 SORTERS = [

@@ -1,0 +1,18 @@
+LOCALE_TRANSLATED = {
+    "en": "English",
+    "it": "Italian",
+    "jp": "Japanese",
+    "sc": "Simplified Chinese",
+    "tc": "Traditional Chinese",
+    "ae": "Asian-English",
+    "eu": "English (Europe)",
+    "na": "English (North America)",
+    "fr": "French",
+    "fc": "French (Canada)",
+    "sp": "Spanish",
+    "de": "German",
+    "pt": "Portugese",
+    "ja": "Japanese",
+    "au": "English (Austrailia)",
+    "kr": "Korean",
+}

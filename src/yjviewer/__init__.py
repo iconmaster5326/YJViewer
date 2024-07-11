@@ -13,6 +13,7 @@ import ygojson
 
 import yjviewer.search as search
 
+from .locales import LOCALE_TRANSLATED
 from .version import __version__
 
 if os.path.exists(ygojson.AGGREGATE_DIR):
@@ -174,25 +175,6 @@ FORMAT_TRANSLATED = {
     "ocg-sc": "Chinese OCG",
     "masterduel": "Master Duel",
     "duellinks": "Duel Links",
-}
-
-LOCALE_TRANSLATED = {
-    "en": "English",
-    "it": "Italian",
-    "jp": "Japanese",
-    "sc": "Simplified Chinese",
-    "tc": "Traditional Chinese",
-    "ae": "Asian-English",
-    "eu": "English (Europe)",
-    "na": "English (North America)",
-    "fr": "French",
-    "fc": "French (Canada)",
-    "sp": "Spanish",
-    "de": "German",
-    "pt": "Portugese",
-    "ja": "Japanese",
-    "au": "English (Austrailia)",
-    "kr": "Korean",
 }
 
 FORMAT_TO_LOCALES = {

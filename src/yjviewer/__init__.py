@@ -482,6 +482,16 @@ def set_(uuid: uuid.UUID):
     )
 
 
+@app.route("/random-series")
+def random_series():
+    return app.redirect(
+        flask.url_for(
+            series.__name__,
+            uuid=random.choice([*ygodb.series_by_id]),
+        )
+    )
+
+
 @app.route("/series/<uuid:uuid>")
 def series(uuid: uuid.UUID):
     return flask.render_template(
@@ -521,4 +531,22 @@ def search_():
         n_pages=math.ceil(len(results) / search.SEARCH_RESULTS_PER_PAGE),
         human_readable_query=hrq,
         error_message=error_msg,
+    )
+
+
+@app.route("/about")
+def about():
+    return flask.render_template(
+        "about.j2",
+        **common_template_vars(),
+    )
+
+
+@app.route("/syntax")
+def syntax():
+    return flask.render_template(
+        "syntax.j2",
+        **common_template_vars(),
+        FILTERS=search.FILTERS,
+        SORTERS=search.SORTERS,
     )

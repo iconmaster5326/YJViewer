@@ -1,0 +1,127 @@
+{% extends "page.j2" %}
+
+<span>{% block title %}YGOJSON{% endblock %}</span>
+
+{% block contents %}
+<div class="col">
+  <h1 class="fw-bold text-decoration-underline">Search Syntax</h1>
+  <p>
+    Here is a short guide on how to phrase your search queries to filter, sort,
+    and more while using this website.
+  </p>
+  <h2>The Basics</h2>
+  <p>
+    The most basic search is just typing a word into the search bar. By default,
+    we will search for cards that have names that contain all of the words you
+    enter (<tt>like this</tt>). If you want to include special characters or
+    spaces into your search term, surround it with double qoutes (<tt
+      >"like this"</tt
+    >).
+  </p>
+  <p>
+    By default we search for things that match ALL your terms. If you want to
+    match ANY of the terms you give instead, use pipes between terms (<tt
+      >just | like | this</tt
+    >).
+  </p>
+  <p>
+    To negate your search, that is, search for things that DO NOT match a
+    certain term, use a dash before your term (<tt>-like -this</tt>).
+  </p>
+  <p>
+    Finally, you may use parentheses to group together terms if needed (<tt
+      >just (like) this</tt
+    >).
+  </p>
+  <h2>Filters</h2>
+  <p>
+    To search for other properties of things than their name, you can use a
+    variety of filters. If your search term has a colon in front of it
+    (<tt>:like-this</tt>), then it will search for things of the given type:
+    Cards, sets, series, and so on. However, if you put a word before the colon
+    (<tt>like:this</tt>), you can access a variety of different filters for use.
+  </p>
+  <p>Valid filters that can go before the colon include:</p>
+  <table class="table">
+    <thead>
+      <tr>
+        <th scope="col">Filter</th>
+        <th scope="col">AKA...</th>
+        <th scope="col">What Does It Do?</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for f in FILTERS %}
+      <tr>
+        <td>
+          <tt>{{ f.names[0] }}:X</tt>
+        </td>
+        <td><tt>{{ f.names[1:] | join(":X</tt>, <tt>") }}:X</tt></td>
+        <td>{{ f.desc }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <p>
+    Finally, colon is just one way to access a filter. There are also several
+    other operators that you can use instead of the colon (<tt>like=this</tt>,
+    or <tt>like&lt;this</tt>). These include:
+  </p>
+  <ul>
+    <li>
+      <tt>=</tt>: Match a name/effect/etc. EXACTLY, rather than just a part of
+      it.
+    </li>
+    <li>
+      <tt>&lt;</tt>: Match something that's less than your specified value.
+    </li>
+    <li>
+      <tt>&lt;=</tt>: Match something that's less than or equal to your
+      specified value.
+    </li>
+    <li>
+      <tt>&gt;</tt>: Match something that's greater than your specified value.
+    </li>
+    <li>
+      <tt>&gt;=</tt>: Match something that's greater than or equal to your
+      specified value.
+    </li>
+  </ul>
+  <h2>Sorting</h2>
+  <p>
+    If you provide a special sorting condition (like this: <tt>sort:atk</tt>),
+    then the default sorting will be discarded and it will be sorted by your
+    specified criteria. You can specify that this should be sorted ascending
+    order (like this: <tt>sort:atk-asc</tt>) or be sorted in descending order
+    (like this: <tt>sort:atk-desc</tt>). It sorts things in the order of
+    importance you specify sorting terms in. Valid sorting criterion include:
+  </p>
+  <table class="table">
+    <thead>
+      <tr>
+        <th scope="col">Sorter</th>
+        <th scope="col">AKA...</th>
+        <th scope="col">What Does It Do?</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for f in SORTERS %}
+      <tr>
+        <td>
+          <tt>{{ f.names[0] }}:X</tt>
+        </td>
+        <td><tt>{{ f.names[1:] | join(":X</tt>, <tt>") }}:X</tt></td>
+        <td>{{ f.desc }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <h2>Locales</h2>
+  <p>
+    By default, we only search for your terms in the English and Japanese game.
+    If you want to filter to things only available in a certain locale, or
+    search for terms in a language of your choice, you may use the special
+    filter <tt>locale</tt> (like this: <tt>locale:en</tt>).
+  </p>
+</div>
+{% endblock %}

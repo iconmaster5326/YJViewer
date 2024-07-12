@@ -1,0 +1,167 @@
+{% extends "page.j2" %}
+
+<span>{% block title %}YGOJSON{% endblock %}</span>
+
+{% block contents %}
+<div class="col">
+  <h1 class="fw-bold text-decoration-underline">About YGOJSON</h1>
+  <p>
+    YGOJSON aims to be the ultimate Yugioh database - a set of machine-readable
+    <a href="https://www.json.org/json-en.html">JSON</a> files detailing:
+  </p>
+  <ul>
+    <li>Cards, including tokens and skill cards</li>
+    <li>Sets, including Duel Links and Master Duel sets</li>
+    <li>Archetypes and series information</li>
+    <li>Pack odds</li>
+    <li>Sealed products, such as tin contents</li>
+  </ul>
+  <h2>Using YJViewer</h2>
+  <p>
+    This website you're seeing now runs on
+    <a href="https://github.com/iconmaster5326/YJVeiwer">YJViewer</a>, allowing
+    you to look at the data stored in all that JSON interactively.
+  </p>
+  <h3>Search Syntax</h3>
+  <p>
+    Our search bar lets you filter, sort, and do other things using our search
+    query syntax. If you're familiar with
+    <a href="https://scryfall.com/">Scryfall</a>, it's very similar.
+  </p>
+  <p><a href="/syntax">Click here to learn more about search syntax!</a></p>
+  <h2>Data Sources</h2>
+  <p>We gather our data from the following sources:</p>
+  <ul>
+    <li><a href="https://ygoprodeck.com/">YGOPRODECK</a></li>
+    <li><a href="https://github.com/DawnbrandBots/yaml-yugi">Yaml Yugi</a></li>
+    <li><a href="https://yugipedia.com/">Yugipedia</a></li>
+  </ul>
+  <p>
+    Special thanks goes out to
+    <a href="https://www.ygoprog.com/">YGO Prog</a> for their tireless work on
+    discovering pack odds.
+  </p>
+  <h2>Using the Raw JSON</h2>
+  <p>
+    There are several methods of consuming the database. To get the files, you
+    can either:
+  </p>
+  <ul>
+    <li>
+      Download a ZIP file
+      <a href="https://github.com/iconmaster5326/YGOJSON/releases/latest"
+        >here</a
+      >
+    </li>
+    <li>
+      Download the raw JSON files on the
+      <a href="https://github.com/iconmaster5326/YGOJSON/tree/v1/individual"
+        >indiviual</a
+      >
+      and
+      <a href="https://github.com/iconmaster5326/YGOJSON/tree/v1/aggregate"
+        >aggregate</a
+      >
+      branches
+    </li>
+  </ul>
+  <p>To get the ZIP files in an automated fashion, fetch the following URLs:</p>
+  <ul>
+    <li>
+      For a individualized ZIP file:
+      {{
+        "https://github.com/iconmaster5326/YGOJSON/releases/download/v1/individual.zip"
+          | urlize
+      }}
+    </li>
+    <li>
+      For a aggregated ZIP file:
+      {{
+        "https://github.com/iconmaster5326/YGOJSON/releases/download/v1/aggregate.zip"
+          | urlize
+      }}
+    </li>
+  </ul>
+  <p>
+    If you don't want everything, or don't want to unzip things, just fetch the
+    following URLs for indiviudal things, with <tt>cards</tt> replaced by the
+    type of things you want, and the UUID replaced with your UUID:
+  </p>
+  <ul>
+    <li>
+      For individual card JSON files:
+      {{
+        "https://raw.githubusercontent.com/iconmaster5326/YGOJSON/v1/individual/cards/00045021-f0d3-4473-8bbc-8aa6504d3562.json"
+          | urlize
+      }}
+    </li>
+    <li>
+      For a list of all card UUIDs:
+      {{
+        "https://raw.githubusercontent.com/iconmaster5326/YGOJSON/v1/individual/cards.json"
+          | urlize
+      }}
+    </li>
+    <li>
+      For all information for all cards:
+      {{
+        "https://raw.githubusercontent.com/iconmaster5326/YGOJSON/v1/aggregate/cards.json"
+          | urlize
+      }}
+    </li>
+  </ul>
+  <p>
+    You may have noticed the two different ways of getting the data: individual
+    and aggregate. The differences between the two are as follows:
+  </p>
+  <ul>
+    <li>
+      <tt>individual</tt>: Each card, set, etc. is in its own JSON file, whose
+      filename is its UUID.
+    </li>
+    <li><tt>aggregate</tt>: Every card, set, etc. is in one JSON file.</li>
+  </ul>
+  <p>
+    Within each folder should be the data you need. Check out the
+    <a href="https://json-schema.org/">JSON schema</a> for all this data
+    <a href="https://github.com/iconmaster5326/YGOJSON/tree/main/schema/v1/"
+      >here</a
+    >.
+  </p>
+  <p>We have the following things available for you:</p>
+  <ul>
+    <li>
+      <tt>cards</tt>: Yugioh cards. This includes tokens and Speed Duel skill
+      cards. This does NOT include Rush Duel cards, and does NOT include
+      video-game exclusive cards.
+    </li>
+    <li>
+      <tt>sets</tt>: Yugioh products such as booster packs, decks, and sets of
+      promotional cards.
+    </li>
+    <li><tt>series</tt>: Information about archetypes and series.</li>
+    <li>
+      <tt>sealedProducts</tt>: Sealed products are things like booster boxes,
+      tins, and other things that consist of a mix of packs.
+    </li>
+    <li>
+      <tt>distributions</tt>: Pack odds information for sets. You can use this
+      to figure out how to make random packs of sets accurately.
+    </li>
+  </ul>
+  <p>
+    The data is regenerated from our sources every day at midnight. So if you
+    don't see the latest new cards in the database yet, wait a bit!
+  </p>
+  <h2>YGOJSON APIs</h2>
+  <p>
+    You may use the <a href="https://www.python.org/">Python</a> API we use to
+    generate this database in order to consume it, if you don't want to handle
+    the raw JSON.
+  </p>
+  <p>
+    Learn more about our Python package, <tt>ygojson</tt>,
+    <a href="https://github.com/iconmaster5326/YGOJSON/">here</a>!
+  </p>
+</div>
+{% endblock %}

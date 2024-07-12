@@ -26,6 +26,7 @@ class SortDir(enum.Enum):
 
 class Sorter:
     names: typing.ClassVar[typing.List[str]]
+    desc: typing.ClassVar[str]
 
     @classmethod
     def execute(
@@ -69,6 +70,7 @@ class FilterMode(enum.Enum):
 
 class Filter:
     names: typing.ClassVar[typing.List[str]]
+    desc: typing.ClassVar[str]
 
     @classmethod
     def execute(
@@ -355,6 +357,7 @@ class TermNegate(Term):
 
 class FilterName(Filter):
     names = ["name", "n"]
+    desc = "Filter by card name in the selected locales."
 
     @classmethod
     def execute(
@@ -413,6 +416,7 @@ class FilterName(Filter):
 
 class FilterEffect(Filter):
     names = ["effect", "e"]
+    desc = "Filter by effect text or card lore in the selected locales."
 
     @classmethod
     def execute(
@@ -488,6 +492,7 @@ THING_NAMES = {
 
 class FilterClass(Filter):
     names = ["class", "cl", ""]
+    desc = "Filter by what type of thing you want to see: <tt>card</tt>, <tt>set<tt>, <tt>product</tt>, or <tt>series</tt>."
 
     @classmethod
     def execute(
@@ -522,6 +527,7 @@ Accaptable values include 'card' (or 'c'), 'pack'/'set' or ('s'), 'sealed'/'prod
 
 class FilterType(Filter):
     names = ["type", "t"]
+    desc = "Filter by the contents of a card's typeline."
 
     @classmethod
     def execute(
@@ -572,6 +578,7 @@ class FilterType(Filter):
 
 class FilterAttribute(Filter):
     names = ["attribute", "attr", "a"]
+    desc = "Filter by a card's attribute."
 
     @classmethod
     def execute(
@@ -664,6 +671,7 @@ FILTER_MODE_TO_NAME = {
 
 class FilterATK(FilterInt):
     names = ["attack", "atk", "at"]
+    desc = "Filter by cards with, greater than, or less than a certain ATK."
 
     @classmethod
     def get_int_prop(
@@ -680,6 +688,7 @@ class FilterATK(FilterInt):
 
 class FilterDEF(FilterInt):
     names = ["defence", "defense", "def", "de"]
+    desc = "Filter by cards with, greater than, or less than a certain DEF."
 
     @classmethod
     def get_int_prop(
@@ -696,6 +705,7 @@ class FilterDEF(FilterInt):
 
 class FilterLevel(FilterInt):
     names = ["level", "lvl", "lv", "l"]
+    desc = "Filter by cards with, greater than, or less than a certain level. This does NOT match to Xyz monsters."
 
     @classmethod
     def get_int_prop(
@@ -712,6 +722,7 @@ class FilterLevel(FilterInt):
 
 class FilterRank(FilterInt):
     names = ["rank", "r"]
+    desc = "Filter by cards with, greater than, or less than a certain rank. This does NOT match to non-Xyz monsters."
 
     @classmethod
     def get_int_prop(
@@ -728,6 +739,7 @@ class FilterRank(FilterInt):
 
 class FilterScale(FilterInt):
     names = ["scale", "sc"]
+    desc = "Filter by cards with, greater than, or less than a certain pendulum scale."
 
     @classmethod
     def get_int_prop(
@@ -744,6 +756,7 @@ class FilterScale(FilterInt):
 
 class FilterLinkRating(FilterInt):
     names = ["linkrating", "link", "lr"]
+    desc = "Filter by cards with, greater than, or less than a certain link rating."
 
     @classmethod
     def get_int_prop(
@@ -849,6 +862,7 @@ def _get_release_date(result: Thing) -> typing.Optional[datetime.date]:
 
 class FilterDateOfRelease(FilterDate):
     names = ["date", "d"]
+    desc = "Filter by cards and/or sets that came out for the first time at, before, or after the given date."
 
     @classmethod
     def get_date_prop(
@@ -888,6 +902,7 @@ FILTER_NAME_MAP = {name: filter for filter in FILTERS for name in filter.names}
 
 class SorterClass(Sorter):
     names = ["classes", "class", "cl"]
+    desc = "Sort by what type of thing it is, in card -> set -> sealed product -> series/archetype order."
 
     @classmethod
     def execute(
@@ -912,6 +927,7 @@ class SorterClass(Sorter):
 
 class SorterName(Sorter):
     names = ["names", "name", "n"]
+    desc = "Sort by names in the selected locale."
 
     @classmethod
     def execute(
@@ -952,6 +968,7 @@ class SorterName(Sorter):
 
 class SorterATK(Sorter):
     names = ["attack", "atk", "at"]
+    desc = "Sort by ATK."
 
     @classmethod
     def execute(
@@ -977,6 +994,7 @@ class SorterATK(Sorter):
 
 class SorterDEF(Sorter):
     names = ["defence", "defense", "def", "de"]
+    desc = "Sort by DEF."
 
     @classmethod
     def execute(
@@ -1002,6 +1020,7 @@ class SorterDEF(Sorter):
 
 class SorterLevel(Sorter):
     names = ["level", "lvl", "lv", "l"]
+    desc = "Sort by level. Does NOT sort ranks in with levels."
 
     @classmethod
     def execute(
@@ -1025,6 +1044,7 @@ class SorterLevel(Sorter):
 
 class SorterRank(Sorter):
     names = ["rank", "r"]
+    desc = "Sort by rank. Does NOT sort levels in with ranks."
 
     @classmethod
     def execute(
@@ -1048,6 +1068,7 @@ class SorterRank(Sorter):
 
 class SorterScale(Sorter):
     names = ["scale", "sc"]
+    desc = "Sort by pendulum scale."
 
     @classmethod
     def execute(
@@ -1071,6 +1092,7 @@ class SorterScale(Sorter):
 
 class SorterLink(Sorter):
     names = ["linkranking", "link", "lr"]
+    desc = "Sort by link rating."
 
     @classmethod
     def execute(
@@ -1092,6 +1114,7 @@ class SorterLink(Sorter):
 
 class SorterDate(Sorter):
     names = ["date", "d"]
+    desc = "Sort by first release date."
 
     @classmethod
     def execute(

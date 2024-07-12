@@ -192,9 +192,17 @@ class Search:
         self.sorts = []
         self.locales = set()
 
-        tree = LANGUAGE.parse(query)
-        # print(tree.pretty())
-        QueryParser(self).transform(tree)
+        try:
+            tree = LANGUAGE.parse(query)
+            # print(tree.pretty())
+            QueryParser(self).transform(tree)
+        except lark.exceptions.VisitError as e:
+            if type(e.orig_exc) is SearchFailedException:
+                raise e.orig_exc
+            else:
+                raise
+        except (lark.exceptions.LexError, lark.exceptions.ParseError) as e:
+            raise SearchFailedException(f"{e}")
 
         if not self.sorts:
             self.sorts = [Sort(SorterClass, SortDir.ASC), Sort(SorterName, SortDir.ASC)]

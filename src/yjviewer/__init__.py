@@ -496,8 +496,17 @@ def series(uuid: uuid.UUID):
 def search_():
     query = flask.request.args.get("query", "")
     page = int(flask.request.args.get("page", "1"))
-    search_ = search.Search(query)
-    results = search_.execute(ygodb)
+    try:
+        search_ = search.Search(query)
+        results = search_.execute(ygodb)
+        hrq = search_.human_readable_query()
+        error_msg = None
+    except search.SearchFailedException as e:
+        results = []
+        hrq = None
+        error_msg = str(e)
+        app.logger.exception(e)
+
     return flask.render_template(
         "search.j2",
         **common_template_vars(),
@@ -510,5 +519,6 @@ def search_():
         SEARCH_RESULTS_PER_PAGE=search.SEARCH_RESULTS_PER_PAGE,
         page=page,
         n_pages=math.ceil(len(results) / search.SEARCH_RESULTS_PER_PAGE),
-        human_readable_query=search_.human_readable_query(),
+        human_readable_query=hrq,
+        error_message=error_msg,
     )

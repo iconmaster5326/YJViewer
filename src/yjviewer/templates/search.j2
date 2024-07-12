@@ -2,7 +2,7 @@
 
 <span>{% block title %}Search Results - YGOJSON{% endblock %}</span>
 
-{% block contents %}
+{% block contents %} {% if error_message is none %}
 <div class="container">
   <div class="row">
     <h1 class="col-auto fw-bold text-decoration-underline">Search Results</h1>
@@ -12,13 +12,19 @@
     </div>
   </div>
   <div class="row">
-    <ul class="fs-xxs col pagination pagination-sm justify-content-center flex-wrap">
+    <ul
+      class="fs-xxs col pagination pagination-sm justify-content-center flex-wrap"
+    >
       <li class="page-item disabled">
         <a class="page-link fs-xxs fs-xs-sm fs-s-md">Page</a>
       </li>
       {% for page_number in range(1, n_pages+1) %}
       <li class="page-item">
-        <a class="page-link fs-xxs fs-xs-sm fs-s-md {%if page == page_number %}active{% endif %}" href="/search?query={{ query | urlencode }}&page={{ page_number }}">{{ page_number }}</a>
+        <a
+          class="page-link fs-xxs fs-xs-sm fs-s-md {%if page == page_number %}active{% endif %}"
+          href="/search?query={{ query | urlencode }}&page={{ page_number }}"
+          >{{ page_number }}</a
+        >
       </li>
       {% endfor %}
     </ul>
@@ -69,4 +75,15 @@
     {% endfor %}
   </div>
 </div>
-{% endblock %}
+{% else %}
+<div class="container">
+  <div class="row">
+    <h1 class="col-auto fw-bold text-decoration-underline">Search Results</h1>
+  </div>
+  <div class="row alert alert-danger">
+    <div>Parsing your search failed for the following reason:</div>
+    <div class="card text-bg-danger"><div class="card-body">{{ error_message }}</div></div>
+    <div>Please check your search terms, fix any found problems, and try again.</div>
+  </div>
+</div>
+{% endif %} {% endblock %}

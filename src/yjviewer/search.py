@@ -10,7 +10,7 @@ import ygojson
 
 from .locales import LOCALE_TRANSLATED
 
-SEARCH_RESULTS_PER_PAGE = 200
+SEARCH_RESULTS_PER_PAGE = 100
 
 Thing = typing.Union[ygojson.Card, ygojson.Set, ygojson.Series, ygojson.SealedProduct]
 

@@ -6,33 +6,26 @@
 <div class="container">
   <div class="row">
     <h1 class="col-auto fw-bold text-decoration-underline">Search Results</h1>
-    <div class="col text-end align-self-end">
+    <div class="col text-end align-self-end fs-xxs fs-xs-sm fs-s-md fs-m-lg">
       <div>Searching for: {{ human_readable_query }}</div>
       <div>({{ n_results }} results returned)</div>
     </div>
   </div>
   <div class="row">
-    <div class="col card">
-      <div class="card-body">
-        <span>Page:</span>
-        {% for page_number in range(1, n_pages+1) %}
-        <span
-          >{% if page == page_number %}
-          {{ page_number }}
-          {% else %}
-          <a
-            href="/search?query={{ query | urlencode }}&page={{ page_number }}"
-            >{{ page_number }}</a
-          >
-          {% endif %}
-        </span>
-        {% endfor %}
-      </div>
-    </div>
+    <ul class="fs-xxs col pagination pagination-sm justify-content-center flex-wrap">
+      <li class="page-item disabled">
+        <a class="page-link fs-xxs fs-xs-sm fs-s-md">Page</a>
+      </li>
+      {% for page_number in range(1, n_pages+1) %}
+      <li class="page-item">
+        <a class="page-link fs-xxs fs-xs-sm fs-s-md {%if page == page_number %}active{% endif %}" href="/search?query={{ query | urlencode }}&page={{ page_number }}">{{ page_number }}</a>
+      </li>
+      {% endfor %}
+    </ul>
   </div>
   <div class="row g-1">
     {% for result in results %}
-    <div class="col-3">
+    <div class="col-6 col-sm-4 col-lg-3 col-xl-2">
       {% if result is oftypecard %}
       {{ cardcard.cardcard(result, subtitle_override="Card", cardcssclasses="h-100") }}
       {% elif result is oftypeset %}

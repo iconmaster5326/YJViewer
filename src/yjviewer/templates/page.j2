@@ -14,6 +14,190 @@
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
     />
+    <style>
+      .fs-xxs {
+        font-size: xx-small;
+      }
+
+      .fs-xs {
+        font-size: x-small;
+      }
+
+      .fs-s {
+        font-size: small;
+      }
+
+      .fs-m {
+        font-size: medium;
+      }
+
+      .fs-l {
+        font-size: large;
+      }
+
+      .fs-xl {
+        font-size: x-large;
+      }
+
+      .fs-xxl {
+        font-size: xx-large;
+      }
+
+      @media (min-width: 576px) {
+        /* sm */
+        .fs-xxs-sm {
+          font-size: xx-small;
+        }
+
+        .fs-xs-sm {
+          font-size: x-small;
+        }
+
+        .fs-s-sm {
+          font-size: small;
+        }
+
+        .fs-m-sm {
+          font-size: medium;
+        }
+
+        .fs-l-sm {
+          font-size: large;
+        }
+
+        .fs-xl-sm {
+          font-size: x-large;
+        }
+
+        .fs-xxl-sm {
+          font-size: xx-large;
+        }
+      }
+
+      @media (min-width: 768px) {
+        /* md */
+        .fs-xxs-md {
+          font-size: xx-small;
+        }
+
+        .fs-xs-md {
+          font-size: x-small;
+        }
+
+        .fs-s-md {
+          font-size: small;
+        }
+
+        .fs-m-md {
+          font-size: medium;
+        }
+
+        .fs-l-md {
+          font-size: large;
+        }
+
+        .fs-xl-md {
+          font-size: x-large;
+        }
+
+        .fs-xxl-md {
+          font-size: xx-large;
+        }
+      }
+
+      @media (min-width: 992px) {
+        /* lg */
+        .fs-xxs-lg {
+          font-size: xx-small;
+        }
+
+        .fs-xs-lg {
+          font-size: x-small;
+        }
+
+        .fs-s-lg {
+          font-size: small;
+        }
+
+        .fs-m-lg {
+          font-size: medium;
+        }
+
+        .fs-l-lg {
+          font-size: large;
+        }
+
+        .fs-xl-lg {
+          font-size: x-large;
+        }
+
+        .fs-xxl-lg {
+          font-size: xx-large;
+        }
+      }
+
+      @media (min-width: 1200px) {
+        /* xl */
+        .fs-xxs-xl {
+          font-size: xx-small;
+        }
+
+        .fs-xs-xl {
+          font-size: x-small;
+        }
+
+        .fs-s-xl {
+          font-size: small;
+        }
+
+        .fs-m-xl {
+          font-size: medium;
+        }
+
+        .fs-l-xl {
+          font-size: large;
+        }
+
+        .fs-xl-xl {
+          font-size: x-large;
+        }
+
+        .fs-xxl-xl {
+          font-size: xx-large;
+        }
+      }
+
+      @media (min-width: 1400px) {
+        /* xxl */
+        .fs-xxs-xxl {
+          font-size: xx-small;
+        }
+
+        .fs-xs-xxl {
+          font-size: x-small;
+        }
+
+        .fs-s-xxl {
+          font-size: small;
+        }
+
+        .fs-m-xxl {
+          font-size: medium;
+        }
+
+        .fs-l-xxl {
+          font-size: large;
+        }
+
+        .fs-xl-xxl {
+          font-size: x-large;
+        }
+
+        .fs-xxl-xxl {
+          font-size: xx-large;
+        }
+      }
+    </style>
   </head>
   <body>
     <script
@@ -112,15 +296,14 @@
       <div class="row">{% block contents required %}{% endblock %}</div>
     </div>
     <footer
-      class="fixed-bottom bg-body-tertiary container"
-      style="font-size: small"
+      class="fixed-bottom bg-body-tertiary container fs-xxs fs-xs-md fs-s-lg"
     >
       <div class="row">
         <div class="col">
           <a href="https://github.com/iconmaster5326/YJVeiwer">YJVeiwer</a>
           {{ yjv_version }}, powered by
-          <a href="https://github.com/iconmaster5326/YGOJSON">YGOJSON</a> {{ db_version }},
-          schema version v{{ schema_version }}.
+          <a href="https://github.com/iconmaster5326/YGOJSON">YGOJSON</a>
+          {{ db_version }}, schema version v{{ schema_version }}.
         </div>
         <div class="col text-end">Page accessed at {{ accesstime }}.</div>
       </div>

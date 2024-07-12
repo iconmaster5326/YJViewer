@@ -1,124 +1,65 @@
 {% extends "page.j2" %} {% import "fragments/cardcard.j2" as cardcard %}
 
+<span>
+  {% macro statcard(title, text) %}
+  <div class="card col m-1 p-0 d-block d-md-none">
+    <div class="card-body">
+      <h6 class="card-subtitle text-body-secondary text-nowrap">
+        {{ text }}
+      </h6>
+    </div>
+  </div>
+  <div class="card col m-1 p-0 d-none d-md-block">
+    <div class="card-body">
+      <h5 class="card-title text-nowrap">{{ title }}</h5>
+      <h6 class="card-subtitle text-body-secondary text-nowrap">
+        {{ text }}
+      </h6>
+    </div>
+  </div>
+  {% endmacro %}
+</span>
+
 <span>{% block title %}{{ card.text["en"].name }} - YGOJSON{% endblock %}</span>
 
 {% block contents %}
 <div class="container">
   <div class="row">
-    <div class="col-3">
+    <div class="col">
       <img
+        class="object-fit-contain h-100 w-100"
         src="{{ card.images[0].card_art }}"
-        style="height: 100%; width: 100%; object-fit: contain"
+        style="object-position: 50% 0%"
       />
     </div>
-    <div class="col-9 container">
-      <h1 class="row fw-bold text-decoration-underline">
-        {{ card.text["en"].name }}
+    <div class="col col-6 col-md-9 container">
+      <h1 class="row">
+        <div class="col fw-bold text-decoration-underline">{{ card.text["en"].name }}</div>
       </h1>
-      <div class="row">
-        <div class="card col-3 m-1 p-0">
-          <div class="card-body">
-            <h5 class="card-title">Card Type</h5>
-            <h6 class="card-subtitle text-body-secondary">
-              {{ card.card_type | translateenum }}
-            </h6>
-          </div>
-        </div>
+      <div class="row g-1 row-cols-3 row-cols-lg-4 row-cols-xl-6">
+        {{ statcard("Card Type", card.card_type | translateenum) }}
         {% if card.subcategory %}
-        <div class="card col-3 m-1 p-0">
-          <div class="card-body">
-            <h5 class="card-title">Category</h5>
-            <h6 class="card-subtitle text-body-secondary">
-              {{ card.subcategory | translateenum }}
-            </h6>
-          </div>
-        </div>
+        {{ statcard("Category", card.subcategory | translateenum) }}
         {% endif %} {% if card.character %}
-        <div class="card col-3 m-1 p-0">
-          <div class="card-body">
-            <h5 class="card-title">Character</h5>
-            <h6 class="card-subtitle text-body-secondary">
-              {{ card.character }}
-            </h6>
-          </div>
-        </div>
+        {{ statcard("Character", card.character) }}
         {% endif %} {% if card.skill_type %}
-        <div class="card col-3 m-1 p-0">
-          <div class="card-body">
-            <h5 class="card-title">Skill Type</h5>
-            <h6 class="card-subtitle text-body-secondary">
-              {{ card.skill_type }}
-            </h6>
-          </div>
-        </div>
+        {{ statcard("Skill Type", card.skill_type) }}
         {% endif %} {% if card.attribute %}
-        <div class="card col-3 m-1 p-0">
-          <div class="card-body">
-            <h5 class="card-title">Attribute</h5>
-            <h6 class="card-subtitle text-body-secondary">
-              {{ card.attribute | translateenum }}
-            </h6>
-          </div>
-        </div>
+        {{ statcard("Attribute", card.attribute | translateenum) }}
         {% endif %} {% if card.monster_card_types %}
-        <div class="card col-3 m-1 p-0">
-          <div class="card-body">
-            <h5 class="card-title">Summoning Types</h5>
-            <h6 class="card-subtitle text-body-secondary">
-              {{ card.monster_card_types | translateenums | join(" / ") }}
-            </h6>
-          </div>
-        </div>
+        {{ statcard("Summoning Types", card.monster_card_types | translateenums | join(" / ")) }}
         {% endif %} {% if card.type %}
-        <div class="card col-3 m-1 p-0">
-          <div class="card-body">
-            <h5 class="card-title">Type</h5>
-            <h6 class="card-subtitle text-body-secondary">
-              {{ card.type | translateenum }}
-            </h6>
-          </div>
-        </div>
+        {{ statcard("Type", card.type | translateenum) }}
         {% endif %} {% if card.classifications %}
-        <div class="card col-3 m-1 p-0">
-          <div class="card-body">
-            <h5 class="card-title">Classifications</h5>
-            <h6 class="card-subtitle text-body-secondary">
-              {{ card.classifications | translateenums | join(" / ") }}
-            </h6>
-          </div>
-        </div>
+        {{ statcard("Classifications", card.classifications | translateenums | join(" / ")) }}
         {% endif %} {% if card.abilities %}
-        <div class="card col-3 m-1 p-0">
-          <div class="card-body">
-            <h5 class="card-title">Abilities</h5>
-            <h6 class="card-subtitle text-body-secondary">
-              {{ card.abilities | translateenums | join(" / ") }}
-            </h6>
-          </div>
-        </div>
+        {{ statcard("Abilities", card.abilities | translateenums | join(" / ")) }}
         {% endif %} {% if card.level is not none %}
-        <div class="card col-3 m-1 p-0">
-          <div class="card-body">
-            <h5 class="card-title">Level</h5>
-            <h6 class="card-subtitle text-body-secondary">{{ card.level }}</h6>
-          </div>
-        </div>
+        {{ statcard("Level", card.level) }}
         {% endif %} {% if card.rank is not none %}
-        <div class="card col-3 m-1 p-0">
-          <div class="card-body">
-            <h5 class="card-title">Rank</h5>
-            <h6 class="card-subtitle text-body-secondary">{{ card.rank }}</h6>
-          </div>
-        </div>
+        {{ statcard("Rank", card.rank) }}
         {% endif %} {% if card.link_arrows %}
-        <div class="card col-3 m-1 p-0">
-          <div class="card-body">
-            <h5 class="card-title">Link Arrows</h5>
-            <h6 class="card-subtitle text-body-secondary">
-              {{ card.link_arrows | translateenums | join }}
-            </h6>
-          </div>
-        </div>
+        {{ statcard("Link Arrows", card.link_arrows | translateenums | join) }}
         {% endif %}
       </div>
       {% if card.text["en"].pendulum_effect %}
@@ -133,43 +74,21 @@
         <h4>Card Text</h4>
         <div style="white-space: pre-line">{{ card.text["en"].effect }}</div>
       </div>
-      <div class="row">
+      <div class="row g-1 row-cols-3 row-cols-lg-4 row-cols-xl-6">
         {% if card.scale is not none %}
-        <div class="card col-3 m-1 p-0">
-          <div class="card-body">
-            <h5 class="card-title">Scale</h5>
-            <h6 class="card-subtitle text-body-secondary">{{ card.scale }}</h6>
-          </div>
-        </div>
+        {{ statcard("Scale", card.scale) }}
         {% endif %} {% if card.atk is not none %}
-        <div class="card col-3 m-1 p-0">
-          <div class="card-body">
-            <h5 class="card-title">ATK</h5>
-            <h6 class="card-subtitle text-body-secondary">{{ card.atk }}</h6>
-          </div>
-        </div>
+        {{ statcard("ATK", card.atk) }}
         {% endif %} {% if card.def_ is not none %}
-        <div class="card col-3 m-1 p-0">
-          <div class="card-body">
-            <h5 class="card-title">DEF</h5>
-            <h6 class="card-subtitle text-body-secondary">{{ card.def_ }}</h6>
-          </div>
-        </div>
+        {{ statcard("DEF", card.def_) }}
         {% endif %} {% if card.link_arrows %}
-        <div class="card col-3 m-1 p-0">
-          <div class="card-body">
-            <h5 class="card-title">Link</h5>
-            <h6 class="card-subtitle text-body-secondary">
-              {{ card.link_arrows | length }}
-            </h6>
-          </div>
-        </div>
+        {{ statcard("Link", card.link_arrows | length) }}
         {% endif %}
       </div>
     </div>
   </div>
   <div class="row">
-    <div class="col container">
+    <div class="col col-12 col-lg-6 col-xxl-4 container">
       <h2 class="row">External IDs</h2>
       <ul class="row">
         <li>Password: {{ card.passwords | join(" / ") }}</li>
@@ -208,13 +127,13 @@
         {% endif %}
       </ul>
     </div>
-    <div class="col container">
+    <div class="col col-12 col-lg-6 col-xxl-4 container">
       <h2 class="row">Legality</h2>
       <div class="row">
         {% if card.illegal %}
         <div class="col">This card is illegal in all formats.</div>
         {% else %} {% for format in card.legality %}
-        <div class="col-4">
+        <div class="col-6">
           <div class="card m-1 p-0">
             <div class="card-body">
               <h5 class="card-title">{{ format | translateformat }}</h5>
@@ -228,7 +147,7 @@
       </div>
     </div>
     {% if card.series %}
-    <div class="col container">
+    <div class="col col-12 col-lg-6 col-xxl-4 container">
       <h2 class="row">Part of</h2>
       <ul class="row">
         {% for series in card.series | unique %}
@@ -239,10 +158,8 @@
       </ul>
     </div>
     {% endif %}
-  </div>
-  <div class="row">
     {% if card.master_duel_rarity %}
-    <div class="col container">
+    <div class="col col-12 col-lg-6 col-xxl-4 container">
       <h2 class="row">Master Duel</h2>
       <ul class="row">
         <li>Rairty: {{ card.master_duel_rarity | translateenum }}</li>
@@ -253,7 +170,7 @@
       </ul>
     </div>
     {% endif %} {% if card.duel_links_rarity %}
-    <div class="col container">
+    <div class="col col-12 col-lg-6 col-xxl-4 container">
       <h2 class="row">Duel Links</h2>
       <ul class="row">
         <li>Rairty: {{ card.duel_links_rarity | translateenum }}</li>
@@ -266,16 +183,21 @@
     <div class="col container">
       <h2 class="row">Printings</h2>
       <div class="container">
-        <div class="row">
-          {% for set in card.sets | unique %} {% for locale in set | getsetlocales %} {% for content in set | getsetlocalecontents(locale) %} {% for printing in content.cards %} {% if printing.card == card %} {% for edition in set | getseteditions(locale) %}
-          <div class="col-3">
+        <div class="row g-1">
+          {% for set in card.sets | unique %} {% for locale in set |
+          getsetlocales %} {% for content in set | getsetlocalecontents(locale)
+          %} {% for printing in content.cards %} {% if printing.card == card %}
+          {% for edition in set | getseteditions(locale) %}
+          <div class="col-6 col-sm-4 col-lg-3 col-xl-2">
             {{ cardcard.cardcard(card, printing, locale, edition, set) }}
           </div>
-          {% endfor %} {% endif %} {% endfor %} {% endfor %} {% endfor %} {% endfor %}
+          {% endfor %} {% endif %} {% endfor %} {% endfor %} {% endfor %} {%
+          endfor %}
         </div>
       </div>
     </div>
     {% endif %}
   </div>
+  <div class="row" style="height: 5%"></div>
 </div>
 {% endblock %}

@@ -3,6 +3,52 @@
 <span>{% block title %}YGOJSON{% endblock %}</span>
 
 {% block contents %}
-<div class="row"><h1>YGOJSON - The Ultimate Yugioh Database</h1></div>
-<div>In this database we have {{ ygodb.cards | length }} cards.</div>
+<div
+  class="col container text-center align-content-center"
+  style="height: 75vh"
+>
+  <div class="row justify-content-center">
+    <h1 class="col fw-bold text-decoration-underline" style="font-size: 350%">
+      YGOJSON - The Ultimate Yugioh Database
+    </h1>
+  </div>
+  <div class="row justify-content-center">
+    <h5 class="col">
+      In this database we have {{ ygodb.cards | length }} cards,
+      {{ ygodb.sets | length }} sets, {{ ygodb.products | length }} sealed
+      products, and {{ ygodb.series | length }} series/archetypes.
+    </h5>
+  </div>
+  <div class="row" style="height: 10%"></div>
+  <div class="row justify-content-center">
+    <form action="/search" class="d-flex" role="search">
+      <input
+        id="query"
+        name="query"
+        class="form-control me-2 fs-2"
+        type="search"
+        placeholder="Search the database..."
+        aria-label="Search"
+        value="{{ query | e }}"
+      />
+      <button class="btn btn-outline-primary text-nowrap fs-2" type="submit">
+        Search!
+      </button>
+    </form>
+  </div>
+  <div class="row" style="height: 5%"></div>
+  <div class="row justify-content-center p-2">
+    {% for card in cards_of_the_day %}
+    <a
+      class="col"
+      style="{% if loop.index % 2 == 0 %}transform: translate(0, 15%);{% endif %}"
+      href="/card/{{ card.id }}"
+      ><img
+        class="w-100"
+        class="object-fit-contain"
+        src="{{ card.images[0].card_art }}"
+    /></a>
+    {% endfor %}
+  </div>
+</div>
 {% endblock %}

@@ -23,6 +23,10 @@ else:
     ygodb = ygojson.load_from_internet(aggregates_dir=ygojson.AGGREGATE_DIR)
 ygodb.regenerate_backlinks()
 
+portenial_cotd = [x for x in ygodb.cards if x.images and x.images[0].card_art]
+cards_of_the_day = [random.choice(portenial_cotd) for i in range(5)]
+del portenial_cotd
+
 app = flask.Flask(__name__)
 
 ENUM_TRANSLATED: typing.Dict[enum.Enum, str] = {
@@ -430,7 +434,12 @@ def common_template_vars():
 
 @app.route("/")
 def index():
-    return flask.render_template("index.j2", **common_template_vars(), ygodb=ygodb)
+    return flask.render_template(
+        "index.j2",
+        **common_template_vars(),
+        ygodb=ygodb,
+        cards_of_the_day=cards_of_the_day,
+    )
 
 
 @app.route("/random-card")

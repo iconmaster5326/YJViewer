@@ -34,7 +34,9 @@
     </div>
     <div class="col col-6 col-md-9 container">
       <h1 class="row">
-        <div class="col fw-bold text-decoration-underline">{{ card.text["en"].name }}</div>
+        <div class="col fw-bold text-decoration-underline">
+          {{ card.text["en"].name }}
+        </div>
       </h1>
       <div class="row g-1 row-cols-3 row-cols-lg-4 row-cols-xl-6">
         {{ statcard("Card Type", card.card_type | translateenum) }}
@@ -157,8 +159,7 @@
         {% endfor %}
       </ul>
     </div>
-    {% endif %}
-    {% if card.master_duel_rarity %}
+    {% endif %} {% if card.master_duel_rarity %}
     <div class="col col-12 col-lg-6 col-xxl-4 container">
       <h2 class="row">Master Duel</h2>
       <ul class="row">
@@ -181,14 +182,208 @@
   <div class="row">
     {% if card.sets %}
     <div class="col container">
-      <h2 class="row">Printings</h2>
+      <div class="row">
+        <h2 class="col col-12 col-md-3">Printings</h2>
+        <div class="col-12 col-md-9 container">
+          <div class="row justify-content-end g-1">
+            <div class="col-2 col-sm-auto">
+              <form class="dropdown" autocomplete="off">
+                <button
+                  class="btn btn-secondary dropdown-toggle"
+                  type="button"
+                  data-bs-toggle="dropdown"
+                  aria-expanded="false"
+                >
+                  Locales
+                </button>
+                <ul class="dropdown-menu">
+                  {% for lc in card | cardlocales %}
+                  <li class="px-2">
+                    <div class="form-check form-switch">
+                      <input
+                        id="filter-locale-{{ lc }}"
+                        class="form-check-input"
+                        type="checkbox"
+                        role="switch"
+                        data-bs-toggle="collapse"
+                        data-bs-target=".filter-locale-{{ lc }}"
+                        aria-expanded="false"
+                        aria-controls="filter-locale-{{ lc }}"
+                        checked
+                      />
+                      <label
+                        class="form-check-label"
+                        for="filter-locale-{{ lc }}"
+                        >{{ lc | translatelocale }}</label
+                      >
+                    </div>
+                  </li>
+                  {% endfor %}
+                </ul>
+              </form>
+            </div>
+            <div class="col-2 col-sm-auto">
+              <form class="dropdown" autocomplete="off">
+                <button
+                  class="btn btn-secondary dropdown-toggle"
+                  type="button"
+                  data-bs-toggle="dropdown"
+                  aria-expanded="false"
+                >
+                  Formats
+                </button>
+                <ul class="dropdown-menu">
+                  {% for f in card | cardformats %}
+                  <li class="px-2">
+                    <div class="form-check form-switch">
+                      <input
+                        id="filter-format-{{ f }}"
+                        class="form-check-input"
+                        type="checkbox"
+                        role="switch"
+                        data-bs-toggle="collapse"
+                        data-bs-target=".filter-format-{{ f }}"
+                        aria-expanded="false"
+                        aria-controls="filter-format-{{ f }}"
+                        checked
+                      />
+                      <label
+                        class="form-check-label"
+                        for="filter-format-{{ f }}"
+                        >{{ f | translateformat }}</label
+                      >
+                    </div>
+                  </li>
+                  {% endfor %}
+                </ul>
+              </form>
+            </div>
+            <div class="col-2 col-sm-auto">
+              <form class="dropdown" autocomplete="off">
+                <button
+                  class="btn btn-secondary dropdown-toggle"
+                  type="button"
+                  data-bs-toggle="dropdown"
+                  aria-expanded="false"
+                >
+                  Editions
+                </button>
+                <ul class="dropdown-menu">
+                  {% for e in card | cardeditions %}
+                  <li class="px-2">
+                    <div class="form-check form-switch">
+                      <input
+                        id="filter-edition-{{ e.value }}"
+                        class="form-check-input"
+                        type="checkbox"
+                        role="switch"
+                        data-bs-toggle="collapse"
+                        data-bs-target=".filter-edition-{{ e.value }}"
+                        aria-expanded="false"
+                        aria-controls="filter-edition-{{ e.value }}"
+                        checked
+                      />
+                      <label
+                        class="form-check-label"
+                        for="filter-edition-{{ e.value }}"
+                        >{{ e | translateenum }}</label
+                      >
+                    </div>
+                  </li>
+                  {% endfor %}
+                </ul>
+              </form>
+            </div>
+            <div class="col-2 col-sm-auto">
+              <form class="dropdown" autocomplete="off">
+                <button
+                  class="btn btn-secondary dropdown-toggle"
+                  type="button"
+                  data-bs-toggle="dropdown"
+                  aria-expanded="false"
+                >
+                  Rarities
+                </button>
+                <ul class="dropdown-menu">
+                  {% for e in card | cardrarities %}
+                  <li class="px-2">
+                    <div class="form-check form-switch">
+                      <input
+                        id="filter-rarity-{{ e.value }}"
+                        class="form-check-input"
+                        type="checkbox"
+                        role="switch"
+                        data-bs-toggle="collapse"
+                        data-bs-target=".filter-rarity-{{ e.value }}"
+                        aria-expanded="false"
+                        aria-controls="filter-rarity-{{ e.value }}"
+                        checked
+                      />
+                      <label
+                        class="form-check-label"
+                        for="filter-rarity-{{ e.value }}"
+                        >{{ e | translateenum }}</label
+                      >
+                    </div>
+                  </li>
+                  {% endfor %}
+                </ul>
+              </form>
+            </div>
+            <div class="col-2 col-sm-auto">
+              <form class="dropdown" autocomplete="off">
+                <button
+                  class="btn btn-secondary dropdown-toggle"
+                  type="button"
+                  data-bs-toggle="dropdown"
+                  aria-expanded="false"
+                >
+                  Sets
+                </button>
+                <ul class="dropdown-menu">
+                  {% for set in card.sets | unique %}
+                  <li class="px-2">
+                    <div class="form-check form-switch">
+                      <input
+                        id="filter-set-{{ set.id }}"
+                        class="form-check-input"
+                        type="checkbox"
+                        role="switch"
+                        data-bs-toggle="collapse"
+                        data-bs-target=".filter-set-{{ set.id }}"
+                        aria-expanded="false"
+                        aria-controls="filter-set-{{ set.id }}"
+                        checked
+                      />
+                      <label
+                        class="form-check-label"
+                        for="filter-set-{{ set.id }}"
+                        >{{ set.name["en"] }}</label
+                      >
+                    </div>
+                  </li>
+                  {% endfor %}
+                </ul>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
       <div class="container">
         <div class="row g-1">
           {% for set in card.sets | unique %} {% for locale in set |
           getsetlocales %} {% for content in set | getsetlocalecontents(locale)
           %} {% for printing in content.cards %} {% if printing.card == card %}
           {% for edition in set | getseteditions(locale) %}
-          <div class="col-6 col-sm-4 col-lg-3 col-xl-2">
+          <div
+            class="col-6 col-sm-4 col-lg-3 col-xl-2 collapse show filter-locale-{% if locale %}{{
+              locale.key
+            }}{% endif %} filter-format-{{ printing | printingformat(locale, content) }} filter-edition-{% if edition %}{{
+              edition.value
+            }}{% endif %} filter-rarity-{% if printing and printing.rarity %}{{
+              printing.rarity.value
+            }}{% endif %} filter-set-{{ set.id }}"
+          >
             {{ cardcard.cardcard(card, printing, locale, edition, set) }}
           </div>
           {% endfor %} {% endif %} {% endfor %} {% endfor %} {% endfor %} {%

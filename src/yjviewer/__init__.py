@@ -183,11 +183,35 @@ FORMAT_TRANSLATED = {
 }
 
 FORMAT_TO_LOCALES = {
-    "tcg": ["en", "na", "eu", "au", "es", "pt", "de", "it", "fr"],
-    "speed": ["en", "na", "eu", "au", "es", "pt", "de", "it", "fr"],
-    "ocg": ["ja", "ae"],
-    "ocg-kr": ["kr"],
+    "tcg": ["en", "na", "eu", "au", "oc", "es", "sp", "pt", "de", "it", "fr", "fc"],
+    "speed": ["en", "na", "eu", "au", "oc", "es", "pt", "de", "it", "fr", "fc"],
+    "ocg": ["jp", "ja", "ae", "tc", "zh-TW"],
+    "ocg-kr": ["kr", "ko"],
     "ocg-sc": ["sc", "zh-CN"],
+}
+
+LOCALE_TO_FORMAT = {
+    "en": ygojson.Format.TCG,
+    "na": ygojson.Format.TCG,
+    "eu": ygojson.Format.TCG,
+    "au": ygojson.Format.TCG,
+    "oc": ygojson.Format.TCG,
+    "es": ygojson.Format.TCG,
+    "sp": ygojson.Format.TCG,
+    "pt": ygojson.Format.TCG,
+    "de": ygojson.Format.TCG,
+    "it": ygojson.Format.TCG,
+    "fr": ygojson.Format.TCG,
+    "fc": ygojson.Format.TCG,
+    "jp": ygojson.Format.OCG,
+    "ja": ygojson.Format.OCG,
+    "ae": ygojson.Format.OCG,
+    "tc": ygojson.Format.OCG,
+    "zh-TW": ygojson.Format.OCG,
+    "kr": ygojson.Format.OCG,
+    "ko": ygojson.Format.OCG,
+    "sc": ygojson.Format.OCG,
+    "zh-CN": ygojson.Format.OCG,
 }
 
 
@@ -381,6 +405,75 @@ def setformats(set_: ygojson.Set) -> typing.Iterable[ygojson.Format]:
     return {
         f for l in set_.contents for f in l.formats
     }  # TODO: stop using deprecated member
+
+
+@app.template_filter()
+def cardlocales(card: ygojson.Card) -> typing.Iterable[str]:
+    return sorted(
+        {
+            lc
+            for set_ in card.sets
+            for lc in set_.locales
+            if any(
+                p.card.id == card.id
+                for content in set_.contents
+                for p in content.cards
+                if set_.locales[lc] in content.locales
+            )
+        }
+    )
+
+
+@app.template_filter()
+def cardformats(card: ygojson.Card) -> typing.Iterable[str]:
+    return sorted(
+        {
+            printingformat(None, locale, content)
+            for set_ in card.sets
+            for content in set_.contents
+            for locale in content.locales or [None]
+            if any(p.card.id == card.id for p in content.cards)
+        }
+    )
+
+
+@app.template_filter()
+def cardeditions(card: ygojson.Card) -> typing.Iterable[ygojson.SetEdition]:
+    return sorted(
+        {
+            edition
+            for set_ in card.sets
+            for content in set_.contents
+            for edition in content.editions
+            if any(p.card.id == card.id for p in content.cards)
+        },
+        key=lambda x: x.value,
+    )
+
+
+@app.template_filter()
+def cardrarities(card: ygojson.Card) -> typing.Iterable[ygojson.CardRarity]:
+    return sorted(
+        {
+            printing.rarity
+            for set_ in card.sets
+            for content in set_.contents
+            for printing in content.cards
+            if printing.card.id == card.id and printing.rarity
+        },
+        key=lambda x: x.value,
+    )
+
+
+@app.template_filter()
+def printingformat(
+    printing: typing.Optional[ygojson.CardPrinting],
+    locale: typing.Optional[ygojson.SetLocale],
+    content: ygojson.SetContents,
+) -> str:
+    if locale:
+        return "/".join(x.value for x in locale.formats)
+    return "/".join(x.value for x in content.formats)
 
 
 @app.template_test()

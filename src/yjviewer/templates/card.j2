@@ -184,6 +184,38 @@
     <div class="col container">
       <div class="row">
         <h2 class="col col-12 col-md-3">Printings</h2>
+        <script>
+          function updateFilters() {
+            for (const cardhtml of document.querySelectorAll(".filter-card")) {
+              let show = true;
+              for (const hideBasedOn of ["locale", "format", "edition", "rarity", "set"]) {
+                if (cardhtml.classList.contains("hide-basedon-" + hideBasedOn)) {
+                  show = false;
+                  break;
+                }
+              }
+              if (show) {
+                bootstrap.Collapse.getOrCreateInstance(cardhtml, {toggle: false}).show();
+              } else {
+                bootstrap.Collapse.getOrCreateInstance(cardhtml, {toggle: false}).hide();
+              }
+            }
+          }
+
+          function toggleFilter(what, checked, value) {
+            console.log("Toggling " + what + " " + value + " to " + checked)
+            for (const cardhtml of document.querySelectorAll(".filter-card")) {
+              if (cardhtml.classList.contains("filter-"+what+"-" + value)) {
+                if (checked) {
+                  cardhtml.classList.remove("hide-basedon-"+what);
+                } else {
+                  cardhtml.classList.add("hide-basedon-"+what);
+                }
+              }
+            }
+            updateFilters();
+          }
+        </script>
         <div class="col-12 col-md-9 container">
           <div class="row justify-content-end g-1">
             <div class="col-2 col-sm-auto">
@@ -205,10 +237,9 @@
                         class="form-check-input"
                         type="checkbox"
                         role="switch"
-                        data-bs-toggle="collapse"
-                        data-bs-target=".filter-locale-{{ lc }}"
                         aria-expanded="false"
                         aria-controls="filter-locale-{{ lc }}"
+                        onchange="toggleFilter('locale', this.checked, '{{ lc }}')"
                         checked
                       />
                       <label
@@ -241,10 +272,9 @@
                         class="form-check-input"
                         type="checkbox"
                         role="switch"
-                        data-bs-toggle="collapse"
-                        data-bs-target=".filter-format-{{ f }}"
                         aria-expanded="false"
                         aria-controls="filter-format-{{ f }}"
+                        onchange="toggleFilter('format', this.checked, '{{ f }}')"
                         checked
                       />
                       <label
@@ -277,10 +307,9 @@
                         class="form-check-input"
                         type="checkbox"
                         role="switch"
-                        data-bs-toggle="collapse"
-                        data-bs-target=".filter-edition-{{ e.value }}"
                         aria-expanded="false"
                         aria-controls="filter-edition-{{ e.value }}"
+                        onchange="toggleFilter('edition', this.checked, '{{ e.value }}')"
                         checked
                       />
                       <label
@@ -313,10 +342,9 @@
                         class="form-check-input"
                         type="checkbox"
                         role="switch"
-                        data-bs-toggle="collapse"
-                        data-bs-target=".filter-rarity-{{ e.value }}"
                         aria-expanded="false"
                         aria-controls="filter-rarity-{{ e.value }}"
+                        onchange="toggleFilter('rarity', this.checked, '{{ e.value }}')"
                         checked
                       />
                       <label
@@ -349,10 +377,9 @@
                         class="form-check-input"
                         type="checkbox"
                         role="switch"
-                        data-bs-toggle="collapse"
-                        data-bs-target=".filter-set-{{ set.id }}"
                         aria-expanded="false"
                         aria-controls="filter-set-{{ set.id }}"
+                        onchange="toggleFilter('set', this.checked, '{{ set.id }}')"
                         checked
                       />
                       <label
@@ -376,7 +403,7 @@
           %} {% for printing in content.cards %} {% if printing.card == card %}
           {% for edition in set | getseteditions(locale) %}
           <div
-            class="col-6 col-sm-4 col-lg-3 col-xl-2 collapse show filter-locale-{% if locale %}{{
+            class="col-6 col-sm-4 col-lg-3 col-xl-2 collapse show filter-card filter-locale-{% if locale %}{{
               locale.key
             }}{% endif %} filter-format-{{ printing | printingformat(locale, content) }} filter-edition-{% if edition %}{{
               edition.value

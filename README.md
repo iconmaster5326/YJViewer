@@ -46,6 +46,11 @@ pre-commit install
 
 # Changelog
 
+## 0.1.1
+
+* Fix image loading.
+* Add filtering to card printing display.
+
 ## 0.1.0
 
 Initial version.

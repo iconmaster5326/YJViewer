@@ -303,12 +303,22 @@ def printingimage(
 ) -> str:
     if not edition:
         edition = ygojson.SetEdition.NONE
+
     if not printing or not locale:
         if card.images:
             return card.images[0].card_art or CARD_BACK_URL
         return CARD_BACK_URL
+
+    printing = ygodb.printings_by_id[
+        printing.id
+    ]  # Flask loves to make copies of random objects
+
     if edition in locale.card_images and printing in locale.card_images[edition]:
         return locale.card_images[edition][printing]
+    if edition == ygojson.SetEdition.NONE:
+        for e in locale.card_images:
+            if printing in locale.card_images[e]:
+                return locale.card_images[e][printing]
     if (
         ygojson.SetEdition.NONE in locale.card_images
         and printing in locale.card_images[ygojson.SetEdition.NONE]

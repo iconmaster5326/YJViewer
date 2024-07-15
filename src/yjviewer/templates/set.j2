@@ -5,13 +5,14 @@
 <span>
   {% macro gallery(locale, content, edition, loopindex) %}
   <div class="row">
+    {% if (content.cards | length) > 0 %}
     <h2 class="col-4 text-start text-decoration-underline">
       {% if locale %}{{ locale.key | translatelocale }}{% else %}Worldwide{%
       endif %}{% if edition %} ({{ edition | translateenum }}){% endif %}
     </h2>
     <div class="col text-start text-secondary">
       {% if locale %}
-      {{ locale.prefix }}
+      {{ locale.prefix or "(no set code)" }}
       {% if locale.date %} -- {{ locale.date }}{% endif %} {% if locale.db_ids
       %} -- Konami ID: {{ locale.db_ids | dbsetlinks | join(" / ") }}{% endif %}
       {% if content.ygoprodeck %} -- YGOPRODECK:
@@ -47,6 +48,15 @@
         {% endfor %}
       </div>
     </div>
+    {% else %}
+    <h2 class="col-4 text-start text-decoration-underline">
+      {% if locale %}{{ locale.key | translatelocale }}{% else %}Worldwide{%
+      endif %}{% if edition %} ({{ edition | translateenum }}){% endif %}
+    </h2>
+    <div class="col text-start text-secondary">
+      (no cards)
+    </div>
+    {% endif %}
   </div>
   {% endmacro %}
 </span>

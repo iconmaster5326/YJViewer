@@ -97,12 +97,12 @@ class Term:
         raise NotImplementedError
 
 
-def _flatten(xs):
+def flatten(xs):
     if not isinstance(xs, list):
         yield xs
         return
     for x in xs:
-        yield from _flatten(x)
+        yield from flatten(x)
 
 
 SORT_FILTER = "sort"
@@ -115,7 +115,7 @@ class QueryParser(lark.Transformer):
         self.search = search
 
     def start(self, data) -> typing.Any:
-        self.search.terms.extend(_flatten(data))
+        self.search.terms.extend(flatten(data))
 
     def predicate_simple(self, data) -> typing.Any:
         (word,) = data
@@ -170,10 +170,10 @@ class QueryParser(lark.Transformer):
         return data
 
     def alternation(self, data) -> typing.Any:
-        return TermOr([*_flatten(data)])
+        return TermOr([*flatten(data)])
 
     def negation(self, data) -> typing.Any:
-        return TermNegate([*_flatten(data)])
+        return TermNegate([*flatten(data)])
 
     def WORD(self, token) -> typing.Any:
         return str(token)

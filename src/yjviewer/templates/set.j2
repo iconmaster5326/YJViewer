@@ -2,6 +2,39 @@
 
 <span>{% block title %}{{ set.name["en"] }} - YGOJSON{% endblock %}</span>
 
+<span
+  >{% macro distroslot(slot) %} {% if slot is slotpool %}
+  <li>
+    {% if slot.rarity | length <= 1 %}<span
+      >{{ slot.qty }}
+      {{ slot.rarity[0].rarities | translateenums | join("/") }} card{% if
+      slot.qty != 1 %}s{% endif %}</span
+    >{% else %}<span>
+      {{ slot.qty }} card{% if slot.qty != 1 %}s{% endif %}{% if
+      slot.proportionate %}<i> (proportionate)</i>{% endif %}:</span
+    >
+    <ul>
+      {% for weight in slot.rarity %}
+      <li>
+        {% if weight.chance != 1 %}1:{{ weight.chance }}{% else %}Else {% endif
+        %} {{ weight.rarities | translateenums | join("/") }}
+      </li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+  </li>
+  {% elif slot is slotcards %} {% for card in slot.cards %}
+  <li>
+    <a href="/card/{{ slot.card.id }}">{{ slot.card.text["en"].name }}</a>
+  </li>
+  {% endfor %} {% elif slot is slotset %}
+  <li>
+    the contents of
+    <a href="/set/{{ slot.set.id }}">{{ slot.set.name["en"] }}</a>
+  </li>
+  {% endif %} {% endmacro %}</span
+>
+
 <span>
   {% macro gallery(locale, content, edition, loopindex) %}
   <div class="row">
@@ -80,7 +113,9 @@
       <h2>In Sealed Products</h2>
       <ul>
         {% for product in products %}
-        <li><a href="/product/{{ product.id }}">{{ product.name['en'] }}</a></li>
+        <li>
+          <a href="/product/{{ product.id }}">{{ product.name["en"] }}</a>
+        </li>
         {% endfor %}
       </ul>
       {% endif %}
@@ -103,6 +138,37 @@
         >
       </div>
     </div>
+  </div>
+  <div class="row">
+    {% for rawdistro, contentslist in (set | groupcontentsbydistro).items() %}
+    <div class="col col-12 col-lg-6 col-xxl-4 container">
+      <h4 class="row">
+        <div class="col">
+          Pack Distribution{{ set | distrolocales(contentslist) }}
+        </div>
+      </h4>
+      {% if rawdistro is specialdistro %}
+      <div class="row">{{ rawdistro | translateenum }}</div>
+      {% else %} {% set distro = rawdistro | getdistrobyid %}
+      <div class="row">
+        <div class="col">
+          {{ distro | distrolen(locales) }} card packs{% if distro.quotas %}<i>
+            ( min. {% for type, qty in distro.quotas.items() %}{{ qty }}
+            {{ type | translateenum }} {% endfor %})</i
+          >{% endif %}:
+        </div>
+      </div>
+      <div class="row">
+        <ul>
+          {% for slot in distro.slots %}
+          {{
+            distroslot(slot)
+          }}
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+    {% endif %} {% endfor %}
   </div>
   {% for locale in set | getlocales %} {% for content in set |
   getlocalecontents(locale) %} {% for edition in set | getseteditions(locale) %}

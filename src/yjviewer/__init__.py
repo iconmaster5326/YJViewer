@@ -170,6 +170,7 @@ ENUM_TRANSLATED: typing.Dict[enum.Enum, str] = {
     ygojson.CardRarity.MILLENIUMULTRA: "MUR",
     ygojson.CardRarity.MILLENIUMSECRET: "MScR",
     ygojson.CardRarity.MILLENIUMGOLD: "MGR",
+    ygojson.SpecialDistroType.PRECON: "Preconstructed",
 }
 
 FORMAT_TRANSLATED = {
@@ -514,6 +515,63 @@ def setproducts(set_: ygojson.Set) -> typing.List[ygojson.SealedProduct]:
     return result
 
 
+@app.template_filter()
+def getdistrobyid(id: uuid.UUID) -> typing.Optional[ygojson.PackDistrobution]:
+    return ygodb.distros_by_id.get(id)
+
+
+@app.template_filter()
+def distrolen(
+    distro: ygojson.PackDistrobution, locales: typing.Iterable[ygojson.SetLocale]
+) -> int:
+    result = 0
+    for slot in distro.slots:
+        if type(slot) is ygojson.PackDistroSlotCards:
+            result += len(slot.cards)
+        elif type(slot) is ygojson.PackDistroSlotSet:
+            result += max(
+                [
+                    len(x.cards)
+                    for locale in locales
+                    for x in getlocalecontents(slot.set, locale)
+                ]
+            )
+        elif type(slot) is ygojson.PackDistroSlotPool:
+            result += slot.qty
+    return result
+
+
+@app.template_filter()
+def groupcontentsbydistro(
+    set_: ygojson.Set,
+) -> typing.Dict[
+    typing.Union[ygojson.SpecialDistroType, uuid.UUID], typing.List[ygojson.SetContents]
+]:
+    result: typing.Dict[
+        typing.Union[ygojson.SpecialDistroType, uuid.UUID],
+        typing.List[ygojson.SetContents],
+    ] = {}
+    for contents in set_.contents:
+        if contents.distrobution:
+            result.setdefault(contents.distrobution, [])
+            result[contents.distrobution].append(contents)
+    return result
+
+
+@app.template_filter()
+def distrolocales(
+    set: ygojson.Set, contentslist: typing.List[ygojson.SetContents]
+) -> str:
+    if len(contentslist) == len(set.contents):
+        return ""
+    return f" ({'/'.join({*(translatelocale(l.key) for c in contentslist for l in c.locales)})})"
+
+
+@app.template_filter()
+def flatten(xs):
+    return search.flatten(xs)
+
+
 @app.template_test()
 def oftypecard(thing) -> bool:
     return type(thing) == ygojson.Card
@@ -537,6 +595,26 @@ def oftypedistro(thing) -> bool:
 @app.template_test()
 def oftypeproduct(thing) -> bool:
     return type(thing) == ygojson.SealedProduct
+
+
+@app.template_test()
+def specialdistro(distro) -> bool:
+    return type(distro) == ygojson.SpecialDistroType
+
+
+@app.template_test()
+def slotpool(thing) -> bool:
+    return type(thing) == ygojson.PackDistroSlotPool
+
+
+@app.template_test()
+def slotcards(thing) -> bool:
+    return type(thing) == ygojson.PackDistroSlotCards
+
+
+@app.template_test()
+def slotset(thing) -> bool:
+    return type(thing) == ygojson.PackDistroSlotSet
 
 
 page_load_start_time = time.time()

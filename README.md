@@ -46,6 +46,11 @@ pre-commit install
 
 # Changelog
 
+## 0.2.0
+
+* Added support for viewing sealed products.
+* Added support for viewing set pack distributions.
+
 ## 0.1.1
 
 * Fix image loading.

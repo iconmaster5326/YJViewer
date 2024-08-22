@@ -53,9 +53,7 @@
       {% if locale %}{{ locale.key | translatelocale }}{% else %}Worldwide{%
       endif %}{% if edition %} ({{ edition | translateenum }}){% endif %}
     </h2>
-    <div class="col text-start text-secondary">
-      (no cards)
-    </div>
+    <div class="col text-start text-secondary">(no cards)</div>
     {% endif %}
   </div>
   {% endmacro %}
@@ -65,19 +63,29 @@
 <div class="container">
   <h1 class="row fw-bold text-decoration-underline">{{ set.name["en"] }}</h1>
   <div class="row">
-    <div class="col-3">
+    <div class="col-6 col-md-3">
       <img
         style="height: 100%; width: 100%; object-fit: contain"
         src="{{ set | setgenericpackimage }}"
       />
     </div>
-    <div class="col-6">
+    <div class="col-6 col-md-3">
       <img
         style="height: 100%; width: 100%; object-fit: contain"
         src="{{ set | setgenericboximage }}"
       />
     </div>
-    <div class="col-3 container p-1 text-end">
+    <div class="col-6 col-md-3">
+      {% set products = set | setproducts %} {% if (products | length) != 0 %}
+      <h2>In Sealed Products</h2>
+      <ul>
+        {% for product in products %}
+        <li><a href="/product/{{ product.id }}">{{ product.name['en'] }}</a></li>
+        {% endfor %}
+      </ul>
+      {% endif %}
+    </div>
+    <div class="col-6 col-md-3 container p-1 text-end">
       {% if set.yugipedia %}
       <div class="row">
         <span
@@ -97,8 +105,7 @@
     </div>
   </div>
   {% for locale in set | getlocales %} {% for content in set |
-  getlocalecontents(locale) %} {% for edition in set | getseteditions(locale)
-  %}
+  getlocalecontents(locale) %} {% for edition in set | getseteditions(locale) %}
   {{ gallery(locale, content, edition, loop.index) }}
   {% endfor %} {% endfor %} {% endfor %}
 </div>

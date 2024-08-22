@@ -498,6 +498,22 @@ def printingformat(
     return "/".join(x.value for x in content.formats)
 
 
+@app.template_filter()
+def setproducts(set_: ygojson.Set) -> typing.List[ygojson.SealedProduct]:
+    result = []
+    for product in ygodb.products:
+        yielded = False
+        for contents in product.contents:
+            for pack in contents.packs:
+                if pack.set == set_:
+                    result.append(product)
+                    yielded = True
+                    break
+            if yielded:
+                break
+    return result
+
+
 @app.template_test()
 def oftypecard(thing) -> bool:
     return type(thing) == ygojson.Card

@@ -1,0 +1,59 @@
+{% extends "page.j2" %}
+
+<span>{% block title %}{{ product.name["en"] }} - YGOJSON{% endblock %}</span>
+
+{% block contents %}
+<div class="container">
+  <h1 class="row fw-bold text-decoration-underline">
+    {{ product.name["en"] }}
+  </h1>
+  <div class="row">
+    <div class="col-3">
+      <img
+        style="height: 100%; width: 100%; object-fit: contain"
+        src="{{ product | productgenericimage }}"
+      />
+    </div>
+    <div class="col container p-1 text-end">
+      {% if product.yugipedia %}
+      <div class="row">
+        <span
+          ><b>Yugipedia: </b
+          ><a href="https://yugipedia.com/wiki/{{ product.yugipedia.name }}"
+            >{{ product.yugipedia.name }} ({{ product.yugipedia.id }})</a
+          ></span
+        >
+      </div>
+      {% endif %}
+    </div>
+  </div>
+  <div class="row">
+    {% for locale in product | getlocales %}
+    <div class="col col-12 col-lg-6 col-xxl-4 container">
+      <h2 class="row">
+        {% if locale %}{{ locale.key | translatelocale }}{% else %}Worldwide{%
+        endif %}
+      </h2>
+      <ul class="row">
+        {% for contents in product | getlocalecontents(locale) %} {% for pack,
+        qty in contents.packs.items() %} {% if pack.card %}
+        <li>
+          {{ qty }} {% if qty != 1 %}copies{% else %}copy{% endif %} of
+          <a href="/set/{{ pack.card.id }}"
+            >{{ pack.card.text["en"].name }} (from
+            <a href="/set/{{ pack.set.id }}">{{ pack.set.name["en"] }}</a
+            >)</a
+          >
+        </li>
+        {% else %}
+        <li>
+          {{ qty }} pack{% if qty != 1 %}s{% endif %} of
+          <a href="/set/{{ pack.set.id }}">{{ pack.set.name["en"] }}</a>
+        </li>
+        {% endif %} {% endfor %} {% endfor %}
+      </ul>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

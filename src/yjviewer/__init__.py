@@ -277,23 +277,28 @@ def currentlegality(
 
 
 @app.template_filter()
-def getsetlocales(
-    set_: ygojson.Set,
-) -> typing.Iterable[typing.Optional[ygojson.SetLocale]]:
-    if not set_.locales:
+def getlocales(
+    thing: typing.Union[ygojson.Set, ygojson.SealedProduct],
+) -> typing.Iterable[
+    typing.Optional[typing.Union[ygojson.SetLocale, ygojson.SealedProductLocale]]
+]:
+    if not thing.locales:
         yield None
         return
-    yield from set_.locales.values()
+    yield from thing.locales.values()
 
 
 @app.template_filter()
-def getsetlocalecontents(
-    set_: ygojson.Set, locale: typing.Optional[ygojson.SetLocale]
-) -> typing.Iterable[ygojson.SetContents]:
+def getlocalecontents(
+    thing: typing.Union[ygojson.Set, ygojson.SealedProduct],
+    locale: typing.Optional[
+        typing.Union[ygojson.SetLocale, ygojson.SealedProductLocale]
+    ],
+) -> typing.Iterable[typing.Union[ygojson.SetContents, ygojson.SealedProductContents]]:
     if not locale:
-        yield from set_.contents
+        yield from thing.contents
         return
-    for content in set_.contents:
+    for content in thing.contents:
         if locale in content.locales:
             yield content
 
@@ -393,6 +398,23 @@ def setgenericpackimage(set_: ygojson.Set) -> str:
 @app.template_filter()
 def setgenericimage(set_: ygojson.Set) -> str:
     return setgenericpackimage(set_) or setgenericboximage(set_) or CARD_BACK_URL
+
+
+@app.template_filter()
+def productgenericimage(product: ygojson.SealedProduct) -> str:
+    for preferred_locale in ["en", "na", "ja", "jp"]:
+        if (
+            preferred_locale in product.locales
+            and product.locales[preferred_locale].image
+        ):
+            return product.locales[preferred_locale].image or CARD_BACK_URL
+    for locale in product.locales.values():
+        if locale.image:
+            return locale.image
+    for content in product.contents:
+        if content.image:
+            return content.image
+    return CARD_BACK_URL
 
 
 @app.template_filter()
@@ -602,6 +624,26 @@ def series(uuid: uuid.UUID):
         **common_template_vars(),
         ygodb=ygodb,
         series=ygodb.series_by_id[uuid],
+    )
+
+
+@app.route("/random-product")
+def random_product():
+    return app.redirect(
+        flask.url_for(
+            series.__name__,
+            uuid=random.choice([*ygodb.series_by_id]),
+        )
+    )
+
+
+@app.route("/product/<uuid:uuid>")
+def product(uuid: uuid.UUID):
+    return flask.render_template(
+        "product.j2",
+        **common_template_vars(),
+        ygodb=ygodb,
+        product=ygodb.products_by_id[uuid],
     )
 
 

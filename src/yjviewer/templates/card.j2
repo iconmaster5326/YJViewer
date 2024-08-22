@@ -399,7 +399,7 @@
       <div class="container">
         <div class="row g-1">
           {% for set in card.sets | unique %} {% for locale in set |
-          getsetlocales %} {% for content in set | getsetlocalecontents(locale)
+          getlocales %} {% for content in set | getlocalecontents(locale)
           %} {% for printing in content.cards %} {% if printing.card == card %}
           {% for edition in set | getseteditions(locale) %}
           <div

@@ -7,6 +7,7 @@ LOCALE_TRANSLATED = {
     "ae": "Asian-English",
     "eu": "English (Europe)",
     "na": "English (North America)",
+    "oc": "English (Oceania)",
     "fr": "French",
     "fc": "French (Canada)",
     "sp": "Spanish",

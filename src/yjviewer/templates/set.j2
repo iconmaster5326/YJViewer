@@ -96,8 +96,8 @@
       </div>
     </div>
   </div>
-  {% for locale in set | getsetlocales %} {% for content in set |
-  getsetlocalecontents(locale) %} {% for edition in set | getseteditions(locale)
+  {% for locale in set | getlocales %} {% for content in set |
+  getlocalecontents(locale) %} {% for edition in set | getseteditions(locale)
   %}
   {{ gallery(locale, content, edition, loop.index) }}
   {% endfor %} {% endfor %} {% endfor %}

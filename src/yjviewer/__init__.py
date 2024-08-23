@@ -366,23 +366,6 @@ def dbsetlinks(db_ids: typing.Iterable[int]) -> typing.Iterable[str]:
 
 
 @app.template_filter()
-def setgenericboximage(set_: ygojson.Set) -> str:
-    for preferred_locale in ["en", "na", "ja", "jp"]:
-        if (
-            preferred_locale in set_.locales
-            and set_.locales[preferred_locale].box_image
-        ):
-            return set_.locales[preferred_locale].box_image or ""
-    for locale in set_.locales.values():
-        if locale.box_image:
-            return locale.box_image
-    for content in set_.contents:
-        if content.box_image:
-            return content.box_image
-    return ""
-
-
-@app.template_filter()
 def setgenericpackimage(set_: ygojson.Set) -> str:
     for preferred_locale in ["en", "na", "ja", "jp"]:
         if preferred_locale in set_.locales and set_.locales[preferred_locale].image:
@@ -398,7 +381,7 @@ def setgenericpackimage(set_: ygojson.Set) -> str:
 
 @app.template_filter()
 def setgenericimage(set_: ygojson.Set) -> str:
-    return setgenericpackimage(set_) or setgenericboximage(set_) or CARD_BACK_URL
+    return setgenericpackimage(set_) or CARD_BACK_URL
 
 
 @app.template_filter()

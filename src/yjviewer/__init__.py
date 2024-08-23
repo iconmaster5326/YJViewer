@@ -708,8 +708,8 @@ def series(uuid: uuid.UUID):
 def random_product():
     return app.redirect(
         flask.url_for(
-            series.__name__,
-            uuid=random.choice([*ygodb.series_by_id]),
+            product.__name__,
+            uuid=random.choice([*ygodb.products_by_id]),
         )
     )
 

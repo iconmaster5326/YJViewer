@@ -46,6 +46,10 @@ pre-commit install
 
 # Changelog
 
+## 0.2.2
+
+* Fixed bug with the random sealed product button.
+
 ## 0.2.1
 
 * Removed deprecated use of `boxImage` property.

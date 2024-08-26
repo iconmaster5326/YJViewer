@@ -157,7 +157,10 @@ class QueryParser(lark.Transformer):
             return []
 
         if filtername_normalized == LOCALE_FILTER:
-            self.search.locales.add(word.strip().lower())
+            try:
+                self.search.locales.add(ygojson.Locale.normalize(word.strip().lower()))
+            except ValueError:
+                raise SearchFailedException(f"Unknown locale '{word}'!")
             return []
 
         if filtername_normalized not in FILTER_NAME_MAP:
@@ -186,7 +189,7 @@ class Search:
     query: str
     terms: typing.List[Term]
     sorts: typing.List[Sort]
-    locales: typing.Set[str]
+    locales: typing.Set[ygojson.Locale]
 
     def __init__(self, query: str) -> None:
         self.query = query
@@ -221,7 +224,9 @@ class Search:
             )
         if self.locales:
             result += ", in "
-            result += " / ".join(LOCALE_TRANSLATED.get(x, x) for x in self.locales)
+            result += " / ".join(
+                LOCALE_TRANSLATED.get(x, x.value) for x in self.locales
+            )
         return result
 
     def _exclude_cards_out_of_locale(
@@ -262,7 +267,7 @@ class Search:
             *self._exclude_series_out_of_locale(db.series),
         ]
         if not self.locales:
-            self.locales = {"en", "jp"}
+            self.locales = {ygojson.Locale.ENGLISH, ygojson.Locale.JAPANESE}
         for term in self.terms:
             results = term.execute(db, self, results)
         return sorted(
@@ -381,25 +386,26 @@ class FilterName(Filter):
         for result in results:
             if type(result) is ygojson.Card:
                 if any(
-                    l in result.text and cmp(result.text[l].name.lower())
+                    l.language in result.text
+                    and cmp(result.text[l.language].name.lower())
                     for l in search.locales
                 ):
                     yield result
             elif type(result) is ygojson.Set:
                 if any(
-                    l in result.name and cmp(result.name[l].lower())
+                    l.language in result.name and cmp(result.name[l.language].lower())
                     for l in search.locales
                 ):
                     yield result
             elif type(result) is ygojson.Series:
                 if any(
-                    l in result.name and cmp(result.name[l].lower())
+                    l.language in result.name and cmp(result.name[l.language].lower())
                     for l in search.locales
                 ):
                     yield result
             elif type(result) is ygojson.SealedProduct:
                 if any(
-                    l in result.name and cmp(result.name[l].lower())
+                    l.language in result.name and cmp(result.name[l.language].lower())
                     for l in search.locales
                 ):
                     yield result
@@ -935,23 +941,27 @@ class SorterName(Sorter):
     ) -> typing.Any:
         if type(result) is ygojson.Card:
             s = "\n".join(
-                (result.text[l].name.lower() if l in result.text else "�")
-                for l in sorted(search.locales)
+                (
+                    result.text[l.language].name.lower()
+                    if l.language in result.text
+                    else "�"
+                )
+                for l in sorted(search.locales, key=lambda x: x.value)
             )
         elif type(result) is ygojson.Set:
             s = "\n".join(
-                (result.name[l].lower() if l in result.name else "�")
-                for l in sorted(search.locales)
+                (result.name[l.language].lower() if l.language in result.name else "�")
+                for l in sorted(search.locales, key=lambda x: x.value)
             )
         elif type(result) is ygojson.Series:
             s = "\n".join(
-                (result.name[l].lower() if l in result.name else "�")
-                for l in sorted(search.locales)
+                (result.name[l.language].lower() if l.language in result.name else "�")
+                for l in sorted(search.locales, key=lambda x: x.value)
             )
         elif type(result) is ygojson.SealedProduct:
             s = "\n".join(
-                (result.name[l].lower() if l in result.name else "�")
-                for l in sorted(search.locales)
+                (result.name[l.language].lower() if l.language in result.name else "�")
+                for l in sorted(search.locales, key=lambda x: x.value)
             )
         else:
             return None

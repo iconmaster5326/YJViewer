@@ -1,11 +1,11 @@
 {% extends "page.j2" %}
 
-<span>{% block title %}{{ product.name["en"] }} - YGOJSON{% endblock %}</span>
+<span>{% block title %}{{ product.name[en] }} - YGOJSON{% endblock %}</span>
 
 {% block contents %}
 <div class="container">
   <h1 class="row fw-bold text-decoration-underline">
-    {{ product.name["en"] }}
+    {{ product.name[en] }}
   </h1>
   <div class="row">
     <div class="col-3">
@@ -40,15 +40,15 @@
         <li>
           {{ qty }} {% if qty != 1 %}copies{% else %}copy{% endif %} of
           <a href="/set/{{ pack.card.id }}"
-            >{{ pack.card.text["en"].name }} (from
-            <a href="/set/{{ pack.set.id }}">{{ pack.set.name["en"] }}</a
+            >{{ pack.card.text[en].name }} (from
+            <a href="/set/{{ pack.set.id }}">{{ pack.set.name[en] }}</a
             >)</a
           >
         </li>
         {% else %}
         <li>
           {{ qty }} pack{% if qty != 1 %}s{% endif %} of
-          <a href="/set/{{ pack.set.id }}">{{ pack.set.name["en"] }}</a>
+          <a href="/set/{{ pack.set.id }}">{{ pack.set.name[en] }}</a>
         </li>
         {% endif %} {% endfor %} {% endfor %}
       </ul>

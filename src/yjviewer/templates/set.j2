@@ -1,6 +1,6 @@
 {% extends "page.j2" %} {% import "fragments/cardcard.j2" as cardcard %}
 
-<span>{% block title %}{{ set.name["en"] }} - YGOJSON{% endblock %}</span>
+<span>{% block title %}{{ set.name[en] }} - YGOJSON{% endblock %}</span>
 
 <span
   >{% macro distroslot(slot) %} {% if slot is slotpool %}
@@ -25,12 +25,12 @@
   </li>
   {% elif slot is slotcards %} {% for card in slot.cards %}
   <li>
-    <a href="/card/{{ slot.card.id }}">{{ slot.card.text["en"].name }}</a>
+    <a href="/card/{{ slot.card.id }}">{{ slot.card.text[en].name }}</a>
   </li>
   {% endfor %} {% elif slot is slotset %}
   <li>
     the contents of
-    <a href="/set/{{ slot.set.id }}">{{ slot.set.name["en"] }}</a>
+    <a href="/set/{{ slot.set.id }}">{{ slot.set.name[en] }}</a>
   </li>
   {% endif %} {% endmacro %}</span
 >
@@ -76,7 +76,7 @@
       <div class="row g-1">
         {% for printing in content.cards %}
         <div class="col-6 col-sm-4 col-lg-3 col-xl-2">
-          {{ cardcard.cardcard(printing.card, printing, locale, edition) }}
+          {{ cardcard.cardcard(printing.card, en, printing, locale, edition) }}
         </div>
         {% endfor %}
       </div>
@@ -94,7 +94,7 @@
 
 {% block contents %}
 <div class="container">
-  <h1 class="row fw-bold text-decoration-underline">{{ set.name["en"] }}</h1>
+  <h1 class="row fw-bold text-decoration-underline">{{ set.name[en] }}</h1>
   <div class="row">
     <div class="col-12 col-md-6">
       <img
@@ -108,7 +108,7 @@
       <ul>
         {% for product in products %}
         <li>
-          <a href="/product/{{ product.id }}">{{ product.name["en"] }}</a>
+          <a href="/product/{{ product.id }}">{{ product.name[en] }}</a>
         </li>
         {% endfor %}
       </ul>

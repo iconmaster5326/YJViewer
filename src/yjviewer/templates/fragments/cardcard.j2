@@ -1,4 +1,4 @@
-{% macro cardcard(card, printing=none, locale=none, edition=none, set=none, subtitle_override=none, cardcssclasses="") %}
+{% macro cardcard(card, lang, printing=none, locale=none, edition=none, set=none, subtitle_override=none, cardcssclasses="") %}
 <a href="{% if set %}/set/{{ set.id }}{% else %}/card/{{ card.id }}{% endif %}">
   <div class="card m-1 p-0 {{ cardcssclasses }}">
     <div class="card-body">
@@ -6,13 +6,13 @@
         class="card-img-top"
         src="{{ set | printingimage(card, printing, locale, edition) }}"
       />
-      <h5 class="card-title">{{ card.text["en"].name }}</h5>
+      <h5 class="card-title">{{ card.text[lang].name }}</h5>
       {% if subtitle_override %}
       <h6 class="card-subtitle text-body-secondary">{{ subtitle_override }}</h6>
       {% endif %}
       {% if set %}
       <h6 class="card-subtitle text-body-secondary">
-        {{ set.name["en"] }}
+        {{ set.name[lang] }}
         {% if locale %} -- {{ locale.key | translatelocale }}{% endif %}
         {% if edition %} -- {{ edition | translateenum }}{% endif %}
         {% if not locale and not edition %} -- {{ set | setformats | translateenums | join("/") }}{% endif %}

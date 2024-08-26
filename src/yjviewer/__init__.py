@@ -184,64 +184,6 @@ FORMAT_TRANSLATED = {
     ygojson.Format.DUELLINKS: "Duel Links",
 }
 
-FORMAT_TO_LOCALES = {
-    ygojson.Format.TCG: [
-        "en",
-        "na",
-        "eu",
-        "au",
-        "oc",
-        "es",
-        "sp",
-        "pt",
-        "de",
-        "it",
-        "fr",
-        "fc",
-    ],
-    ygojson.Format.SPEED: [
-        "en",
-        "na",
-        "eu",
-        "au",
-        "oc",
-        "es",
-        "pt",
-        "de",
-        "it",
-        "fr",
-        "fc",
-    ],
-    ygojson.Format.OCG: ["jp", "ja", "tc", "zh-TW"],
-    ygojson.Format.OCG_KR: ["kr", "ko"],
-    ygojson.Format.OCG_SC: ["sc", "zh-CN"],
-    ygojson.Format.OCG_AE: ["ae"],
-}
-
-LOCALE_TO_FORMAT = {
-    "en": ygojson.Format.TCG,
-    "na": ygojson.Format.TCG,
-    "eu": ygojson.Format.TCG,
-    "au": ygojson.Format.TCG,
-    "oc": ygojson.Format.TCG,
-    "es": ygojson.Format.TCG,
-    "sp": ygojson.Format.TCG,
-    "pt": ygojson.Format.TCG,
-    "de": ygojson.Format.TCG,
-    "it": ygojson.Format.TCG,
-    "fr": ygojson.Format.TCG,
-    "fc": ygojson.Format.TCG,
-    "jp": ygojson.Format.OCG,
-    "ja": ygojson.Format.OCG,
-    "tc": ygojson.Format.OCG,
-    "zh-TW": ygojson.Format.OCG,
-    "ae": ygojson.Format.OCG_AE,
-    "kr": ygojson.Format.OCG_KR,
-    "ko": ygojson.Format.OCG_KR,
-    "sc": ygojson.Format.OCG_SC,
-    "zh-CN": ygojson.Format.OCG_SC,
-}
-
 
 @app.template_filter()
 def zfill(s, n: int):
@@ -265,8 +207,8 @@ def translateformat(f: ygojson.Format) -> str:
 
 
 @app.template_filter()
-def translatelocale(l: str) -> str:
-    return LOCALE_TRANSLATED.get(l, l)
+def translatelocale(l: ygojson.Locale) -> str:
+    return LOCALE_TRANSLATED.get(l, l.value)
 
 
 def getDefaultLegality(
@@ -275,12 +217,12 @@ def getDefaultLegality(
     if not format:
         return None
 
-    locales = FORMAT_TO_LOCALES.get(format, [])
+    locales = format.locales
     dates = []
     for set_ in card.sets:
-        for localecode in locales:
-            if localecode in set_.locales:
-                locale = set_.locales[localecode]
+        for locale in locales:
+            if locale in set_.locales:
+                locale = set_.locales[locale]
                 if locale.date:
                     dates.append(locale.date)
         else:
@@ -412,9 +354,16 @@ def dbsetlinks(db_ids: typing.Iterable[int]) -> typing.Iterable[str]:
     ]
 
 
+PREFERRED_LOCALES = [
+    ygojson.Locale.ENGLISH,
+    ygojson.Locale.ENGLISH_AMERICA,
+    ygojson.Locale.JAPANESE,
+]
+
+
 @app.template_filter()
 def setgenericpackimage(set_: ygojson.Set) -> str:
-    for preferred_locale in ["en", "na", "ja", "jp"]:
+    for preferred_locale in PREFERRED_LOCALES:
         if preferred_locale in set_.locales and set_.locales[preferred_locale].image:
             return set_.locales[preferred_locale].image or ""
     for locale in set_.locales.values():
@@ -433,7 +382,7 @@ def setgenericimage(set_: ygojson.Set) -> str:
 
 @app.template_filter()
 def productgenericimage(product: ygojson.SealedProduct) -> str:
-    for preferred_locale in ["en", "na", "ja", "jp"]:
+    for preferred_locale in PREFERRED_LOCALES:
         if (
             preferred_locale in product.locales
             and product.locales[preferred_locale].image
@@ -461,7 +410,7 @@ def setformats(set_: ygojson.Set) -> typing.Iterable[ygojson.Format]:
 
 
 @app.template_filter()
-def cardlocales(card: ygojson.Card) -> typing.Iterable[str]:
+def cardlocales(card: ygojson.Card) -> typing.Iterable[ygojson.Locale]:
     return sorted(
         {
             lc
@@ -473,7 +422,8 @@ def cardlocales(card: ygojson.Card) -> typing.Iterable[str]:
                 for p in content.cards
                 if set_.locales[lc] in content.locales
             )
-        }
+        },
+        key=lambda x: x.value,
     )
 
 
@@ -678,6 +628,7 @@ def common_template_vars():
         "db_version": ygojson.__version__,
         "schema_version": ygojson.SCHEMA_VERSION,
         "accesstime": datetime.datetime.now().isoformat(),
+        "en": ygojson.Language.ENGLISH,
     }
 
 

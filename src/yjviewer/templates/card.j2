@@ -20,7 +20,7 @@
   {% endmacro %}
 </span>
 
-<span>{% block title %}{{ card.text["en"].name }} - YGOJSON{% endblock %}</span>
+<span>{% block title %}{{ card.text[en].name }} - YGOJSON{% endblock %}</span>
 
 {% block contents %}
 <div class="container">
@@ -35,7 +35,7 @@
     <div class="col col-6 col-md-9 container">
       <h1 class="row">
         <div class="col fw-bold text-decoration-underline">
-          {{ card.text["en"].name }}
+          {{ card.text[en].name }}
         </div>
       </h1>
       <div class="row g-1 row-cols-3 row-cols-lg-4 row-cols-xl-6">
@@ -64,17 +64,17 @@
         {{ statcard("Link Arrows", card.link_arrows | translateenums | join) }}
         {% endif %}
       </div>
-      {% if card.text["en"].pendulum_effect %}
+      {% if card.text[en].pendulum_effect %}
       <div class="row">
         <h4>Pendulum Text</h4>
         <div style="white-space: pre-line">
-          {{ card.text["en"].pendulum_effect }}
+          {{ card.text[en].pendulum_effect }}
         </div>
       </div>
       {% endif %}
       <div class="row">
         <h4>Card Text</h4>
-        <div style="white-space: pre-line">{{ card.text["en"].effect }}</div>
+        <div style="white-space: pre-line">{{ card.text[en].effect }}</div>
       </div>
       <div class="row g-1 row-cols-3 row-cols-lg-4 row-cols-xl-6">
         {% if card.scale is not none %}
@@ -154,7 +154,7 @@
       <ul class="row">
         {% for series in card.series | unique %}
         <li>
-          <a href="/series/{{ series.id }}">{{ series.name["en"] }}</a>
+          <a href="/series/{{ series.id }}">{{ series.name[en] }}</a>
         </li>
         {% endfor %}
       </ul>
@@ -233,18 +233,18 @@
                   <li class="px-2">
                     <div class="form-check form-switch">
                       <input
-                        id="filter-locale-{{ lc }}"
+                        id="filter-locale-{{ lc.value }}"
                         class="form-check-input"
                         type="checkbox"
                         role="switch"
                         aria-expanded="false"
-                        aria-controls="filter-locale-{{ lc }}"
-                        onchange="toggleFilter('locale', this.checked, '{{ lc }}')"
+                        aria-controls="filter-locale-{{ lc.value }}"
+                        onchange="toggleFilter('locale', this.checked, '{{ lc.value }}')"
                         checked
                       />
                       <label
                         class="form-check-label"
-                        for="filter-locale-{{ lc }}"
+                        for="filter-locale-{{ lc.value }}"
                         >{{ lc | translatelocale }}</label
                       >
                     </div>
@@ -385,7 +385,7 @@
                       <label
                         class="form-check-label"
                         for="filter-set-{{ set.id }}"
-                        >{{ set.name["en"] }}</label
+                        >{{ set.name[en] }}</label
                       >
                     </div>
                   </li>
@@ -404,14 +404,14 @@
           {% for edition in set | getseteditions(locale) %}
           <div
             class="col-6 col-sm-4 col-lg-3 col-xl-2 collapse show filter-card filter-locale-{% if locale %}{{
-              locale.key
+              locale.key.value
             }}{% endif %} filter-format-{{ printing | printingformat(locale, content) }} filter-edition-{% if edition %}{{
               edition.value
             }}{% endif %} filter-rarity-{% if printing and printing.rarity %}{{
               printing.rarity.value
             }}{% endif %} filter-set-{{ set.id }}"
           >
-            {{ cardcard.cardcard(card, printing, locale, edition, set) }}
+            {{ cardcard.cardcard(card, en, printing, locale, edition, set) }}
           </div>
           {% endfor %} {% endif %} {% endfor %} {% endfor %} {% endfor %} {%
           endfor %}

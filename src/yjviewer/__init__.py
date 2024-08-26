@@ -174,21 +174,48 @@ ENUM_TRANSLATED: typing.Dict[enum.Enum, str] = {
 }
 
 FORMAT_TRANSLATED = {
-    "tcg": "TCG",
-    "speed": "Speed Duel",
-    "ocg": "OCG",
-    "ocg-kr": "Korean OCG",
-    "ocg-sc": "Chinese OCG",
-    "masterduel": "Master Duel",
-    "duellinks": "Duel Links",
+    ygojson.Format.TCG: "TCG",
+    ygojson.Format.SPEED: "Speed Duel",
+    ygojson.Format.OCG: "OCG",
+    ygojson.Format.OCG_KR: "Korean OCG",
+    ygojson.Format.OCG_SC: "Chinese OCG",
+    ygojson.Format.OCG_AE: "Asian-English OCG",
+    ygojson.Format.MASTERDUEL: "Master Duel",
+    ygojson.Format.DUELLINKS: "Duel Links",
 }
 
 FORMAT_TO_LOCALES = {
-    "tcg": ["en", "na", "eu", "au", "oc", "es", "sp", "pt", "de", "it", "fr", "fc"],
-    "speed": ["en", "na", "eu", "au", "oc", "es", "pt", "de", "it", "fr", "fc"],
-    "ocg": ["jp", "ja", "ae", "tc", "zh-TW"],
-    "ocg-kr": ["kr", "ko"],
-    "ocg-sc": ["sc", "zh-CN"],
+    ygojson.Format.TCG: [
+        "en",
+        "na",
+        "eu",
+        "au",
+        "oc",
+        "es",
+        "sp",
+        "pt",
+        "de",
+        "it",
+        "fr",
+        "fc",
+    ],
+    ygojson.Format.SPEED: [
+        "en",
+        "na",
+        "eu",
+        "au",
+        "oc",
+        "es",
+        "pt",
+        "de",
+        "it",
+        "fr",
+        "fc",
+    ],
+    ygojson.Format.OCG: ["jp", "ja", "tc", "zh-TW"],
+    ygojson.Format.OCG_KR: ["kr", "ko"],
+    ygojson.Format.OCG_SC: ["sc", "zh-CN"],
+    ygojson.Format.OCG_AE: ["ae"],
 }
 
 LOCALE_TO_FORMAT = {
@@ -206,13 +233,13 @@ LOCALE_TO_FORMAT = {
     "fc": ygojson.Format.TCG,
     "jp": ygojson.Format.OCG,
     "ja": ygojson.Format.OCG,
-    "ae": ygojson.Format.OCG,
     "tc": ygojson.Format.OCG,
     "zh-TW": ygojson.Format.OCG,
-    "kr": ygojson.Format.OCG,
-    "ko": ygojson.Format.OCG,
-    "sc": ygojson.Format.OCG,
-    "zh-CN": ygojson.Format.OCG,
+    "ae": ygojson.Format.OCG_AE,
+    "kr": ygojson.Format.OCG_KR,
+    "ko": ygojson.Format.OCG_KR,
+    "sc": ygojson.Format.OCG_SC,
+    "zh-CN": ygojson.Format.OCG_SC,
 }
 
 
@@ -233,8 +260,8 @@ def translateenums(es: typing.Iterable[enum.Enum]) -> typing.Iterable:
 
 
 @app.template_filter()
-def translateformat(f: str) -> str:
-    return FORMAT_TRANSLATED.get(f, f)
+def translateformat(f: ygojson.Format) -> str:
+    return FORMAT_TRANSLATED.get(f, f.value)
 
 
 @app.template_filter()
@@ -242,19 +269,11 @@ def translatelocale(l: str) -> str:
     return LOCALE_TRANSLATED.get(l, l)
 
 
-@app.template_filter()
-def currentlegality(
-    card: ygojson.Card, format: str
+def getDefaultLegality(
+    card: ygojson.Card, format: typing.Optional[ygojson.Format]
 ) -> typing.Optional[ygojson.Legality]:
-    if card.illegal:
-        return ygojson.Legality.FORBIDDEN
-
-    if format in card.legality:
-        legality = card.legality[format]
-        if legality.current:
-            return legality.current
-        if legality.history:
-            return legality.history[-1].legality
+    if not format:
+        return None
 
     locales = FORMAT_TO_LOCALES.get(format, [])
     dates = []
@@ -269,12 +288,40 @@ def currentlegality(
                 dates.append(set_.date)
 
     if not dates:
+        results: typing.List[ygojson.Legality] = []
+        for subformat in format.subformats:
+            result = getDefaultLegality(card, subformat)
+            if result:
+                results.append(result)
+
+        if any(x == ygojson.Legality.UNLIMITED for x in results):
+            return ygojson.Legality.UNLIMITED
+        if results:
+            return ygojson.Legality.UNRELEASED
         return None
+
     today = datetime.datetime.now().date()
     if all(date > today for date in dates):
         return ygojson.Legality.UNRELEASED
     else:
         return ygojson.Legality.UNLIMITED
+
+
+@app.template_filter()
+def currentlegality(
+    card: ygojson.Card, format: ygojson.Format
+) -> typing.Optional[ygojson.Legality]:
+    if card.illegal:
+        return ygojson.Legality.FORBIDDEN
+
+    if format in card.legality.keys():
+        legality = card.legality[format]
+        if legality.current:
+            return legality.current
+        if legality.history:
+            return legality.history[-1].legality
+
+    return getDefaultLegality(card, format)
 
 
 @app.template_filter()

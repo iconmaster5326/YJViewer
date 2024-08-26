@@ -46,6 +46,10 @@ pre-commit install
 
 # Changelog
 
+## 0.2.3
+
+* Support for YGOJSON 0.5.0.
+
 ## 0.2.2
 
 * Fixed bug with the random sealed product button.

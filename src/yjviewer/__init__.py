@@ -186,8 +186,32 @@ ENUM_TRANSLATED: typing.Dict[enum.Enum, str] = {
     ygojson.CardRarity.MILLENIUMSECRET: "MScR",
     ygojson.CardRarity.MILLENIUMGOLD: "MGR",
     ygojson.SpecialDistroType.PRECON: "Preconstructed",
+    ygojson.Language.CHINESE_SIMPLIFIED: "Chinese (Simplified)",
+    ygojson.Language.CHINESE_TRADITIONAL: "Chinese (Traditional)",
+    ygojson.Language.ENGLISH: "English",
+    ygojson.Language.FRENCH: "French",
+    ygojson.Language.GERMAN: "German",
+    ygojson.Language.ITALIAN: "Italian",
+    ygojson.Language.JAPANESE: "Japanese",
+    ygojson.Language.JAPANESE_ROMAJI: "Japanese (Romaji)",
+    ygojson.Language.KOREAN: "Korean",
+    ygojson.Language.KOREAN_ROMANIZED: "Korean (Romanized)",
+    ygojson.Language.PORTUGESE: "Portugese",
+    ygojson.Language.SPANISH: "Spanish",
     **FORMAT_TRANSLATED,
 }
+
+
+@app.template_filter()
+def jsescape(s: str) -> str:
+    if not s:
+        return s
+    return (
+        s.replace("\\", "\\\\")
+        .replace("'", "\\'")
+        .replace('"', '\\"')
+        .replace("\n", "\\n")
+    )
 
 
 @app.template_filter()
@@ -420,6 +444,11 @@ def setformats(set_: ygojson.Set) -> typing.Iterable[ygojson.Format]:
     return {
         f for l in set_.contents for f in l.formats
     }  # TODO: stop using deprecated member
+
+
+@app.template_filter()
+def cardlangs(card: ygojson.Card) -> typing.Iterable[ygojson.Language]:
+    return sorted(card.text.keys(), key=lambda x: x.value)
 
 
 @app.template_filter()

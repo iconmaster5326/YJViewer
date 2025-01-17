@@ -33,10 +33,41 @@
       />
     </div>
     <div class="col col-6 col-md-9 container">
-      <h1 class="row">
-        <div class="col fw-bold text-decoration-underline">
+      <h1 class="row justify-content-between">
+        <div id="name-label" class="col fw-bold text-decoration-underline">
           {{ card.text[en].name }}
         </div>
+        <script>
+          function updateText(langname, name, effect, pendeffect, official) {
+            document.getElementById("lang-toggle").innerText = langname;
+            document.getElementById("name-label").innerText = name;
+            document.getElementById("effect-label").innerText = effect;
+            let pendlabel = document.getElementById("pendeffect-label");
+            if (pendlabel) {
+              pendlabel.innerText = pendeffect;
+            }
+          }
+        </script>
+        <form class="dropdown col-auto" autocomplete="off">
+          <button
+            id="lang-toggle"
+            class="btn btn-secondary dropdown-toggle"
+            type="button"
+            data-bs-toggle="dropdown"
+            aria-expanded="false"
+          >
+            English
+          </button>
+          <ul class="dropdown-menu">
+            {% for lang in card | cardlangs %}
+            <li class="px-2">
+              <a class="dropdown-item" href="#" onclick="updateText('{{lang | translateenum }}', '{{ card.text[lang].name | jsescape }}', '{{ card.text[lang].effect | jsescape }}', '{{ card.text[lang].pendulum_effect | jsescape }}', '{{ card.text[lang].official }}')">
+                {{ lang | translateenum }}{% if card.text[lang].official %}{% else %} (Unofficial){% endif %}
+              </a>
+            </li>
+            {% endfor %}
+          </ul>
+        </form>
       </h1>
       <div class="row g-1 row-cols-3 row-cols-lg-4 row-cols-xl-6">
         {{ statcard("Card Type", card.card_type | translateenum) }}
@@ -67,14 +98,14 @@
       {% if card.text[en].pendulum_effect %}
       <div class="row">
         <h4>Pendulum Text</h4>
-        <div style="white-space: pre-line">
+        <div id="pendeffect-label" style="white-space: pre-line">
           {{ card.text[en].pendulum_effect }}
         </div>
       </div>
       {% endif %}
       <div class="row">
         <h4>Card Text</h4>
-        <div style="white-space: pre-line">{{ card.text[en].effect }}</div>
+        <div id="effect-label" style="white-space: pre-line">{{ card.text[en].effect }}</div>
       </div>
       <div class="row g-1 row-cols-3 row-cols-lg-4 row-cols-xl-6">
         {% if card.scale is not none %}

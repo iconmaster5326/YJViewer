@@ -29,6 +29,17 @@ del portenial_cotd
 
 app = flask.Flask(__name__)
 
+FORMAT_TRANSLATED = {
+    ygojson.Format.TCG: "TCG",
+    ygojson.Format.SPEED: "Speed Duel",
+    ygojson.Format.OCG: "OCG",
+    ygojson.Format.OCG_KR: "Korean OCG",
+    ygojson.Format.OCG_SC: "Chinese OCG",
+    ygojson.Format.OCG_AE: "Asian-English OCG",
+    ygojson.Format.MASTERDUEL: "Master Duel",
+    ygojson.Format.DUELLINKS: "Duel Links",
+}
+
 ENUM_TRANSLATED: typing.Dict[enum.Enum, str] = {
     ygojson.CardType.MONSTER: "Monster",
     ygojson.CardType.SPELL: "Spell",
@@ -115,11 +126,6 @@ ENUM_TRANSLATED: typing.Dict[enum.Enum, str] = {
     ygojson.SetEdition.UNLIMTED: "Unlimited",
     ygojson.SetEdition.LIMITED: "Limited Edition",
     ygojson.SetEdition.NONE: "N/A",
-    ygojson.Format.DUELLINKS: "Duel Links",
-    ygojson.Format.MASTERDUEL: "Master Duel",
-    ygojson.Format.OCG: "OCG",
-    ygojson.Format.TCG: "TCG",
-    ygojson.Format.SPEED: "Speed Duel",
     ygojson.CardRarity.COMMON: "C",
     ygojson.CardRarity.SHORTPRINT: "SP/SSP",
     ygojson.CardRarity.RARE: "R",
@@ -180,17 +186,7 @@ ENUM_TRANSLATED: typing.Dict[enum.Enum, str] = {
     ygojson.CardRarity.MILLENIUMSECRET: "MScR",
     ygojson.CardRarity.MILLENIUMGOLD: "MGR",
     ygojson.SpecialDistroType.PRECON: "Preconstructed",
-}
-
-FORMAT_TRANSLATED = {
-    ygojson.Format.TCG: "TCG",
-    ygojson.Format.SPEED: "Speed Duel",
-    ygojson.Format.OCG: "OCG",
-    ygojson.Format.OCG_KR: "Korean OCG",
-    ygojson.Format.OCG_SC: "Chinese OCG",
-    ygojson.Format.OCG_AE: "Asian-English OCG",
-    ygojson.Format.MASTERDUEL: "Master Duel",
-    ygojson.Format.DUELLINKS: "Duel Links",
+    **FORMAT_TRANSLATED,
 }
 
 
@@ -211,8 +207,16 @@ def translateenums(es: typing.Iterable[enum.Enum]) -> typing.Iterable:
 
 
 @app.template_filter()
-def translateformat(f: ygojson.Format) -> str:
-    return FORMAT_TRANSLATED.get(f, f.value)
+def translateformat(f: typing.Union[str, ygojson.Format]) -> str:
+    if type(f) is str:
+        try:
+            return FORMAT_TRANSLATED.get(ygojson.Format(f), f)
+        except ValueError:
+            return f
+    elif type(f) is ygojson.Format:
+        return FORMAT_TRANSLATED.get(f, f.value)
+    else:
+        return str(f)
 
 
 @app.template_filter()

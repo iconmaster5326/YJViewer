@@ -33,10 +33,10 @@
       />
     </div>
     <div class="col col-6 col-md-9 container">
-      <h1 class="row justify-content-between">
-        <div id="name-label" class="col fw-bold text-decoration-underline">
+      <div class="row justify-content-between">
+        <h1 id="name-label" class="col fw-bold text-decoration-underline">
           {{ card.text[en].name }}
-        </div>
+        </h1>
         <script>
           function updateText(langname, name, effect, pendeffect, official) {
             document.getElementById("lang-toggle").innerText = langname;
@@ -68,7 +68,7 @@
             {% endfor %}
           </ul>
         </form>
-      </h1>
+      </div>
       <div class="row g-1 row-cols-3 row-cols-lg-4 row-cols-xl-6">
         {{ statcard("Card Type", card.card_type | translateenum) }}
         {% if card.subcategory %}

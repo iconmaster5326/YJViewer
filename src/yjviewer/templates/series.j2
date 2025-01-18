@@ -5,7 +5,7 @@
 {% block contents %}
 <div class="container">
   <div class="row">
-    <h1 class="col-auto fw-bold text-decoration-underline">
+    <h1 id="name-label" class="col-auto fw-bold text-decoration-underline">
       {{ series.name[en] }}
     </h1>
     <div class="col text-end">
@@ -23,6 +23,32 @@
         >
       </h5>
       {% endif %}
+      <script>
+        function updateText(langname, name) {
+          document.getElementById("lang-toggle").innerText = langname;
+          document.getElementById("name-label").innerText = name;
+        }
+      </script>
+      <form class="dropdown" autocomplete="off">
+        <button
+          id="lang-toggle"
+          class="btn btn-secondary dropdown-toggle"
+          type="button"
+          data-bs-toggle="dropdown"
+          aria-expanded="false"
+        >
+          English
+        </button>
+        <ul class="dropdown-menu">
+          {% for lang in series | setlangs %}
+          <li class="px-2">
+            <a class="dropdown-item" href="#" onclick="updateText('{{lang | translateenum }}', '{{ series.name[lang] | jsescape }}')">
+              {{ lang | translateenum }}
+            </a>
+          </li>
+          {% endfor %}
+        </ul>
+      </form>
     </div>
   </div>
   <div class="row">

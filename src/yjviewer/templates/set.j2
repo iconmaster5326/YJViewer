@@ -94,7 +94,35 @@
 
 {% block contents %}
 <div class="container">
-  <h1 class="row fw-bold text-decoration-underline">{{ set.name[en] }}</h1>
+  <div class="row">
+    <h1 id="name-label" class="col fw-bold text-decoration-underline">{{ set.name[en] }}</h1>
+    <script>
+      function updateText(langname, name) {
+        document.getElementById("lang-toggle").innerText = langname;
+        document.getElementById("name-label").innerText = name;
+      }
+    </script>
+    <form class="dropdown col-auto" autocomplete="off">
+      <button
+        id="lang-toggle"
+        class="btn btn-secondary dropdown-toggle"
+        type="button"
+        data-bs-toggle="dropdown"
+        aria-expanded="false"
+      >
+        English
+      </button>
+      <ul class="dropdown-menu">
+        {% for lang in set | setlangs %}
+        <li class="px-2">
+          <a class="dropdown-item" href="#" onclick="updateText('{{lang | translateenum }}', '{{ set.name[lang] | jsescape }}')">
+            {{ lang | translateenum }}
+          </a>
+        </li>
+        {% endfor %}
+      </ul>
+    </form>
+  </div>
   <div class="row">
     <div class="col-12 col-md-6">
       <img

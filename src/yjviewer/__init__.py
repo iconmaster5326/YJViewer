@@ -452,6 +452,11 @@ def cardlangs(card: ygojson.Card) -> typing.Iterable[ygojson.Language]:
 
 
 @app.template_filter()
+def setlangs(set_: ygojson.Set) -> typing.Iterable[ygojson.Language]:
+    return sorted(set_.name.keys(), key=lambda x: x.value)
+
+
+@app.template_filter()
 def cardlocales(card: ygojson.Card) -> typing.Iterable[ygojson.Locale]:
     return sorted(
         {

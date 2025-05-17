@@ -142,6 +142,7 @@ ENUM_TRANSLATED: typing.Dict[enum.Enum, str] = {
     ygojson.CardRarity.ULTRA_PURPLE: "UR (purple)",
     ygojson.CardRarity.ULTIMATE: "UtR",
     ygojson.CardRarity.SECRET: "ScR",
+    ygojson.CardRarity.SECRET_RED: "ScRRed",
     ygojson.CardRarity.ULTRASECRET: "UScR",
     ygojson.CardRarity.PRISMATICSECRET: "PScR",
     ygojson.CardRarity.GHOST: "GR/HR",

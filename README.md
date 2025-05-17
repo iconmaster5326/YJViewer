@@ -46,6 +46,10 @@ pre-commit install
 
 # Changelog
 
+## 0.2.4
+
+* Added support for the new red and blue foil secret rares.
+
 ## 0.2.3
 
 * Support for YGOJSON 0.5.0.

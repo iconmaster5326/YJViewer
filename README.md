@@ -46,6 +46,10 @@ pre-commit install
 
 # Changelog
 
+## 0.3.0
+
+* Added support for Genesys.
+
 ## 0.2.4
 
 * Added support for the new red and blue foil secret rares.

@@ -38,6 +38,7 @@ FORMAT_TRANSLATED = {
     ygojson.Format.OCG_AE: "Asian-English OCG",
     ygojson.Format.MASTERDUEL: "Master Duel",
     ygojson.Format.DUELLINKS: "Duel Links",
+    ygojson.Format.GENESYS: "Genesys",
 }
 
 ENUM_TRANSLATED: typing.Dict[enum.Enum, str] = {
@@ -118,6 +119,7 @@ ENUM_TRANSLATED: typing.Dict[enum.Enum, str] = {
     ygojson.Legality.LIMITED: "Limited",
     ygojson.Legality.SEMILIMITED: "Semilimited",
     ygojson.Legality.UNRELEASED: "Unreleased",
+    ygojson.Legality.UNKNOWN: "Unknown",
     ygojson.VideoGameRaity.NORMAL: "N",
     ygojson.VideoGameRaity.RARE: "R",
     ygojson.VideoGameRaity.SUPER: "SR",
@@ -297,12 +299,24 @@ def currentlegality(
 
     if format in card.legality.keys():
         legality = card.legality[format]
-        if legality.current:
-            return legality.current
+        if legality.legality is not None:
+            return legality.legality
         if legality.history:
             return legality.history[-1].legality
 
     return getDefaultLegality(card, format)
+
+
+@app.template_filter()
+def currentpoints(card: ygojson.Card, format: ygojson.Format) -> int:
+    if format in card.legality.keys():
+        legality = card.legality[format]
+        if legality.points is not None:
+            return int(legality.points)
+        if legality.history:
+            return int(legality.history[-1].points or 0)
+
+    return 0
 
 
 @app.template_filter()

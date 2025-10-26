@@ -171,7 +171,11 @@
             <div class="card-body">
               <h5 class="card-title">{{ format | translateformat }}</h5>
               <h6 class="card-subtitle text-body-secondary">
+                {% if format.value == "genesys" %}
+                {{ card | currentpoints(format) }} points
+                {% else %}
                 {{ card | currentlegality(format) | translateenum }}
+                {% endif %}
               </h6>
             </div>
           </div>

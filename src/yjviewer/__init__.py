@@ -212,8 +212,8 @@ def jsescape(s: str) -> str:
         return s
     return (
         s.replace("\\", "\\\\")
-        .replace("'", "\\'")
-        .replace('"', '\\"')
+        .replace("'", "\\&apot;")
+        .replace('"', "\\&quot;")
         .replace("\n", "\\n")
     )
 
